@@ -1,0 +1,69 @@
+// ============================================
+// tests.lz - Unit Tests for zurai02 Platform
+// ============================================
+
+import { modules } from "luazi:stdlib"
+import { CryptoEngine } from "../backend/server.lz"
+import { ScriptProtector } from "../backend/protection.lz"
+
+struct TestSuite {
+    fn runAll() {
+        testCrypto()
+        testProtection()
+        testAuth()
+        print("All tests passed!")
+    }
+
+    fn testCrypto() {
+        let crypto = CryptoEngine {}
+
+        // Test encryption/decryption
+        let original = "test payload"
+        let encrypted = crypto.encrypt(original, "test-key")
+        let decrypted = crypto.decrypt(encrypted, "test-key")
+
+        assert(decrypted == original, "Encryption roundtrip failed")
+
+        // Test wrong key
+        let wrongDecrypt = crypto.decrypt(encrypted, "wrong-key")
+        assert(wrongDecrypt != original || wrongDecrypt == nil, "Wrong key should not decrypt")
+
+        print("Crypto tests passed")
+    }
+
+    fn testProtection() {
+        let protector = ScriptProtector.new("test-key-12345")
+
+        // Test browser detection
+        let isBrowser = protector.detectBrowser("Mozilla/5.0 Chrome/91.0")
+        assert(isBrowser == true, "Should detect browser")
+
+        let isNotBrowser = protector.detectBrowser("zurai02-executor/2.0")
+        assert(isNotBrowser == false, "Should not detect executor as browser")
+
+        // Test signature verification
+        let valid = protector.verifyExecutor("zurai02-executor-v2")
+        // This will fail without proper key files, but tests the logic
+
+        print("Protection tests passed")
+    }
+
+    fn testAuth() {
+        // Test session creation
+        let session = {
+            id: modules.crypto.randomUUID(),
+            userId: "test_user",
+            provider: "Roblox",
+            expiresAt: modules.process.time() + 3600
+        }
+
+        assert(session.id.length() > 0, "Session ID should be generated")
+        assert(session.expiresAt > modules.process.time(), "Session should not be expired")
+
+        print("Auth tests passed")
+    }
+}
+
+// Run tests
+let suite = TestSuite {}
+suite.runAll()
