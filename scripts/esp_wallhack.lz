@@ -1,0 +1,62 @@
+-- ============================================
+-- ESP & Wallhack Utility - zurai02 Development
+-- Format: Luazi (.lz)
+-- ============================================
+
+import { modules } from "luazi:stdlib"
+
+struct ESPConfig {
+    enabled: bool,
+    showNames: bool,
+    showDistance: bool,
+    showHealth: bool,
+    maxDistance: number,
+    color: string
+}
+
+impl ESPConfig {
+    fn default() -> ESPConfig {
+        return ESPConfig {
+            enabled: true,
+            showNames: true,
+            showDistance: true,
+            showHealth: true,
+            maxDistance: 500.0,
+            color: "#ff0000"
+        }
+    }
+}
+
+-- Security wrapper
+fn secureExecute(config: ESPConfig) -> Result<bool, Error> {
+    let core = require("zurai02.core")
+    let auth = core.authenticate()
+
+    guard auth.verified else {
+        return Result.Err(Error.new("BROWSER_ACCESS_REJECTED: Use verified executor"))
+    }
+
+    -- Decrypt and execute ESP payload
+    let payload = core.decrypt(auth.encryptedPayload)
+
+    guard payload != nil else {
+        return Result.Err(Error.new("Failed to decrypt payload"))
+    }
+
+    -- Execute
+    core.execute(payload, config)
+    return Result.Ok(true)
+}
+
+-- Main entry
+fn main() {
+    let config = ESPConfig.default()
+    let result = secureExecute(config)
+
+    match result {
+        Ok(_) => print("ESP activated successfully"),
+        Err(e) => print("Failed: " + e.message)
+    }
+}
+
+main()
