@@ -1,0 +1,55 @@
+-- ============================================
+-- Auto Farm Script - zurai02 Development
+-- Format: Luazi (.lz)
+-- Protection: Encrypted + Executor Verification
+-- ============================================
+
+import { modules } from "luazi:stdlib"
+
+let http = modules.http
+let fs = modules.fs
+
+-- Main auto-farm logic
+async fn autoFarm() -> Result<string, Error> {
+    let config = {
+        gameId: "123456789",
+        farmInterval: 5000,
+        antiDetection: true,
+        maxExecutions: 1000
+    }
+
+    -- Verify executor before running
+    let auth = require("zurai02.core").authenticate()
+
+    guard auth.verified else {
+        return Result.Err(Error.new("Unauthorized executor"))
+    }
+
+    -- Load encrypted farm logic
+    let farmLogic = await http.get("https://zurai02.is-a.dev/api/scripts/farm-v2")
+
+    match farmLogic {
+        Ok(data) => {
+            -- Execute farm payload
+            let success = executeFarm(data, config)
+            if success {
+                return Result.Ok("Farm cycle completed successfully")
+            } else {
+                return Result.Err(Error.new("Farm execution failed"))
+            }
+        },
+        Err(e) => {
+            return Result.Err(e)
+        }
+    }
+}
+
+-- Execute with error handling
+fn main() {
+    let result = await autoFarm()
+
+    match result {
+        Ok(msg) => print("[SUCCESS] " + msg),
+        Err(e) => print("[ERROR] " + e.message)
+    }
+}
