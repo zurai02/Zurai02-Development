@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth Redirect | zurai02 Development</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<base target="_blank">
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <main class="redirect-page">
+        <div class="redirect-card">
+            <div class="redirect-spinner" id="redirect-spinner"></div>
+            <h2 id="redirect-title">Processing Authentication...</h2>
+            <p id="redirect-message">Please wait while we verify your credentials.</p>
+
+            <div class="redirect-info" id="redirect-info">
+                <p><strong>Provider:</strong> <code id="provider-name">Detecting...</code></p>
+                <p><strong>Status:</strong> <code id="auth-status">Processing...</code></p>
+                <p><strong>Domain:</strong> <code>zurai02.is-a.dev</code></p>
+            </div>
+
+            <div id="redirect-actions" style="display:none; margin-top:20px;">
+                <button class="btn btn-primary btn-full" onclick="window.location.href='index.html'">
+                    Go to Dashboard
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    // ============================================
+    // OAuth 2.0 Redirect Handler
+    // zurai02 Development Platform
+    // Domain: zurai02.is-a.dev
+    // ============================================
+
+    const ROBLOX_CLIENT_ID = '3255755288279625071';
+    const ROBLOX_CLIENT_SECRET = 'RBX-cE3K03ijx0OmTf3zok1KFZNrrSDUkjhebgC36p_ifgh2lF-Jbe6XFMGcYpi6yW06';
+    const REDIRECT_URI = 'https://zurai02.is-a.dev/redirect.html';
+
+    // Google OAuth Configuration
+    const GOOGLE_CLIENT_ID = '870510440840-1akk1vvbiqik864jip7pc4al3hmnki1s.apps.googleusercontent.com';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+        const provider = detectProvider(urlParams);
+
+        document.getElementById('provider-name').textContent = provider || 'Unknown';
+
+        if (error) {
+            handleError(error, urlParams.get('error_description'));
+            return;
+        }
+
+        if (!code) {
+            handleError('no_code', 'No authorization code received');
+            return;
+        }
+
+        processAuthentication(code, state, provider);
+    });
+
+    function detectProvider(urlParams) {
+        const state = urlParams.get('state');
+        if (state) {
+            try {
+                const stateData = JSON.parse(atob(state));
+                return stateData.provider;
+            } catch(e) {
+                if (state.includes('google')) return 'Google';
+                if (state.includes('roblox')) return 'Roblox';
+            }
+        }
+        if (urlParams.has('code') && !urlParams.has('scope')) return 'Roblox';
+        return 'Unknown';
+    }
+
+    async function processAuthentication(code, state, provider) {
+        document.getElementById('auth-status').textContent = 'Exchanging token...';
+
+        try {
+            let tokenData;
+            let userData;
+
+            if (provider === 'Roblox') {
+                tokenData = await exchangeRobloxToken(code);
+                userData = await fetchRobloxUser(tokenData.access_token);
+            } else if (provider === 'Google') {
+                tokenData = await exchangeGoogleToken(code);
+                userData = await fetchGoogleUser(tokenData.access_token);
+            } else {
+                throw new Error('Unknown provider');
+            }
+
+            const authData = {
+                provider: provider,
+                access_token: tokenData.access_token,
+                refresh_token: tokenData.refresh_token,
+                expires_in: tokenData.expires_in,
+                user: userData,
+                timestamp: Date.now()
+            };
+
+            localStorage.setItem('zurai02_auth', JSON.stringify(authData));
+
+            document.getElementById('redirect-spinner').style.display = 'none';
+            document.getElementById('redirect-title').textContent = 'Authentication Successful!';
+            document.getElementById('redirect-message').textContent = `Welcome, ${userData.name || userData.displayName || 'User'}! You have been successfully authenticated.`;
+            document.getElementById('auth-status').textContent = 'Success';
+            document.getElementById('auth-status').style.color = '#22c55e';
+            document.getElementById('redirect-actions').style.display = 'block';
+
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 3000);
+
+        } catch (err) {
+            handleError('token_exchange', err.message);
+        }
+    }
+
+    async function exchangeRobloxToken(code) {
+        const response = await fetch('https://apis.roblox.com/oauth/v1/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code: code,
+                client_id: ROBLOX_CLIENT_ID,
+                client_secret: ROBLOX_CLIENT_SECRET,
+                redirect_uri: REDIRECT_URI
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error_description || 'Token exchange failed');
+        }
+
+        return await response.json();
+    }
+
+    async function fetchRobloxUser(accessToken) {
+        const response = await fetch('https://apis.roblox.com/oauth/v1/userinfo', {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch Roblox user data');
+        }
+
+        return await response.json();
+    }
+
+    async function exchangeGoogleToken(code) {
+        const response = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code: code,
+                client_id: GOOGLE_CLIENT_ID,
+                redirect_uri: REDIRECT_URI
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error_description || 'Token exchange failed');
+        }
+
+        return await response.json();
+    }
+
+    async function fetchGoogleUser(accessToken) {
+        const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch Google user data');
+        }
+
+        return await response.json();
+    }
+
+    function handleError(error, description) {
+        document.getElementById('redirect-spinner').style.display = 'none';
+        document.getElementById('redirect-title').textContent = 'Authentication Failed';
+        document.getElementById('redirect-message').textContent = description || 'An error occurred during authentication.';
+        document.getElementById('auth-status').textContent = 'Failed';
+        document.getElementById('auth-status').style.color = '#ef4444';
+        document.getElementById('redirect-actions').style.display = 'block';
+        document.getElementById('redirect-actions').innerHTML = `
+            <button class="btn btn-primary btn-full" onclick="window.location.href='index.html'">
+                Back to Home
+            </button>
+        `;
+
+        console.error('OAuth Error:', error, description);
+    }
+    </script>
+</body>
+</html>
