@@ -1,0 +1,74 @@
+-- ============================================
+-- zurai02 Secure Script (.lz format)
+-- Luazi Programming Language
+-- This script is encrypted and protected
+-- Browser access will be REJECTED
+-- Only verified executors can decrypt and execute
+-- ============================================
+
+import { modules } from "luazi:stdlib"
+
+let zurai02 = require("zurai02.core")
+let crypto = modules.crypto
+let auth = zurai02.authenticate()
+
+-- Security check: Reject if not from verified executor
+fn checkAuth() -> bool {
+    guard auth.verified else {
+        return false
+    }
+    return true
+}
+
+if not checkAuth() {
+    return zurai02.reject({
+        code: "BROWSER_ACCESS_REJECTED",
+        message: "This script can only be executed through a verified executor.",
+        timestamp: modules.process.time(),
+        executor: "unknown"
+    })
+}
+
+-- Verify executor signature
+fn verifySignature() -> bool {
+    let signature = auth.signature
+    let publicKey = auth.publicKey
+    return crypto.verify(signature, publicKey)
+}
+
+if not verifySignature() {
+    return zurai02.reject({
+        code: "INVALID_SIGNATURE",
+        message: "Executor signature verification failed.",
+        timestamp: modules.process.time()
+    })
+}
+
+-- Decrypt payload
+let payload = crypto.decrypt(auth.encryptedPayload, auth.sessionKey)
+
+if payload == nil {
+    return zurai02.reject({
+        code: "DECRYPTION_FAILED",
+        message: "Failed to decrypt script payload.",
+        timestamp: modules.process.time()
+    })
+}
+
+-- Log execution (for analytics)
+zurai02.logExecution({
+    scriptId: "auto-farm-v2",
+    userId: auth.userId,
+    executor: auth.executorName,
+    timestamp: modules.process.time(),
+    ip: auth.clientIP
+})
+
+-- Execute decrypted payload
+let result = zurai02.execute(payload)
+
+return zurai02.success({
+    message: "Script executed successfully",
+    result: result,
+    executionId: crypto.randomUUID()
+})
