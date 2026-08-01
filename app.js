@@ -1,905 +1,323 @@
-// ============================================
-// zurai02 Development - Main Application
-// Secure Roblox Script Execution Platform
-// Domain: zurai02.is-a.dev
-// ============================================
+// zurai02 Development - Main App
+// Domain: https://zurai02.is-a.dev/Zurai02-Development/
 
-// Configuration
 const CONFIG = {
-    // Roblox OAuth 2.0
     ROBLOX_CLIENT_ID: '3255755288279625071',
-    ROBLOX_REDIRECT_URI: 'https://zurai02.is-a.dev/redirect.html',
-
-    // Google OAuth 2.0
+    ROBLOX_REDIRECT: 'https://zurai02.is-a.dev/Zurai02-Development/redirect.html',
     GOOGLE_CLIENT_ID: '870510440840-1akk1vvbiqik864jip7pc4al3hmnki1s.apps.googleusercontent.com',
-    GOOGLE_REDIRECT_URI: 'https://zurai02.is-a.dev/redirect.html',
-
-    API_BASE: 'https://zurai02.is-a.dev/api',
-    ENCRYPTION_KEY: 'zurai02-secure-key-v2'
+    GOOGLE_REDIRECT: 'https://zurai02.is-a.dev/Zurai02-Development/redirect.html'
 };
 
-// Roblox OAuth 2.0 Scopes
 const ROBLOX_SCOPES = ['openid', 'profile'];
-
-// Google OAuth 2.0 Scopes
 const GOOGLE_SCOPES = ['openid', 'email', 'profile'];
 
-// State Management
-const AppState = {
+let state = {
     user: null,
-    isAuthenticated: false,
-    executionCount: parseInt(localStorage.getItem('zurai02_exec_count') || '0'),
-    linkedAccounts: JSON.parse(localStorage.getItem('zurai02_links') || '{}'),
-    scripts: [],
-    currentFilter: 'all'
+    authed: false,
+    execs: parseInt(localStorage.getItem('z02_execs') || '0'),
+    links: JSON.parse(localStorage.getItem('z02_links') || '{}')
 };
 
-// ============================================
-// Initialization
-// ============================================
+const SCRIPTS = [
+    { id: 1, title: 'Auto Farm V2', desc: 'Advanced auto-farming with anti-detection', cat: 'game', execs: 15420, prem: true, fmt: '.lz' },
+    { id: 2, title: 'ESP & Wallhack', desc: 'See players through walls', cat: 'utility', execs: 8932, prem: false, fmt: '.lua' },
+    { id: 3, title: 'Admin Commands', desc: 'Full admin suite', cat: 'admin', execs: 6781, prem: true, fmt: '.lz' },
+    { id: 4, title: 'Speed Hack Pro', desc: 'Adjustable speed modifier', cat: 'utility', execs: 12453, prem: false, fmt: '.txt' },
+    { id: 5, title: 'Aimbot Deluxe', desc: 'Precision aimbot with FOV', cat: 'game', execs: 22105, prem: true, fmt: '.lz' },
+    { id: 6, title: 'Server Manager', desc: 'Advanced server tools', cat: 'admin', execs: 3421, prem: true, fmt: '.lua' }
+];
 
-document.addEventListener('DOMContentLoaded', function() {
-    initParticles();
-    checkAuthStatus();
-    loadScripts();
-    updateExecutionCounter();
-    updateDashboard();
-    setupEventListeners();
-    animateStats();
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
+    renderScripts('all');
+    updateCounters();
+    updateDash();
+    setupFilters();
+    animateNumbers();
 });
 
-// ============================================
-// Particle Background
-// ============================================
+// Auth
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllModals(); });
 
-function initParticles() {
-    const canvas = document.getElementById('particleCanvas');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const particles = [];
-    const particleCount = 50;
-
-    class Particle {
-        constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 2 + 0.5;
-            this.speedX = (Math.random() - 0.5) * 0.5;
-            this.speedY = (Math.random() - 0.5) * 0.5;
-            this.opacity = Math.random() * 0.5 + 0.1;
+function checkAuth() {
+    let data = localStorage.getItem('z02_auth');
+    if (!data) return;
+    try {
+        let parsed = JSON.parse(data);
+        if (parsed.token && Date.now() - parsed.time < (parsed.expires || 3600) * 1000) {
+            state.user = parsed.user;
+            state.authed = true;
+            updateAuthUI();
+        } else {
+            localStorage.removeItem('z02_auth');
         }
-
-        update() {
-            this.x += this.speedX;
-            this.y += this.speedY;
-
-            if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-            if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
-        }
-
-        draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(99, 102, 241, ${this.opacity})`;
-            ctx.fill();
-        }
-    }
-
-    for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle());
-    }
-
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        particles.forEach(particle => {
-            particle.update();
-            particle.draw();
-        });
-
-        // Draw connections
-        particles.forEach((p1, i) => {
-            particles.slice(i + 1).forEach(p2 => {
-                const dx = p1.x - p2.x;
-                const dy = p1.y - p2.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < 150) {
-                    ctx.beginPath();
-                    ctx.moveTo(p1.x, p1.y);
-                    ctx.lineTo(p2.x, p2.y);
-                    ctx.strokeStyle = `rgba(99, 102, 241, ${0.1 * (1 - distance / 150)})`;
-                    ctx.lineWidth = 0.5;
-                    ctx.stroke();
-                }
-            });
-        });
-
-        requestAnimationFrame(animate);
-    }
-
-    animate();
-
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    });
-}
-
-// ============================================
-// Authentication
-// ============================================
-
-function checkAuthStatus() {
-    const authData = localStorage.getItem('zurai02_auth');
-    if (authData) {
-        try {
-            const parsed = JSON.parse(authData);
-            if (parsed.access_token && parsed.timestamp) {
-                const elapsed = Date.now() - parsed.timestamp;
-                const expiresIn = (parsed.expires_in || 3600) * 1000;
-
-                if (elapsed < expiresIn) {
-                    AppState.user = parsed.user;
-                    AppState.isAuthenticated = true;
-                    updateAuthUI();
-                    showToast('Welcome back, ' + (parsed.user.name || 'User') + '!', 'success');
-                } else {
-                    localStorage.removeItem('zurai02_auth');
-                }
-            }
-        } catch (e) {
-            console.error('Auth parse error:', e);
-            localStorage.removeItem('zurai02_auth');
-        }
-    }
+    } catch (e) { localStorage.removeItem('z02_auth'); }
 }
 
 function updateAuthUI() {
-    const authSection = document.getElementById('auth-section');
-    if (!authSection) return;
-
-    if (AppState.isAuthenticated && AppState.user) {
-        const name = AppState.user.name || AppState.user.displayName || 'User';
-        const avatar = AppState.user.picture || AppState.user.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${name}`;
-
-        authSection.innerHTML = `
-            <div class="user-menu" style="position:relative;">
-                <img src="${avatar}" alt="${name}" class="user-avatar-small" style="width:32px;height:32px;border-radius:50%;border:2px solid var(--accent-primary);cursor:pointer;" onclick="toggleUserMenu()">
-                <div class="user-dropdown" id="user-dropdown" style="display:none;position:absolute;top:50px;right:0;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:8px;min-width:160px;box-shadow:var(--shadow-lg);z-index:200;">
-                    <div style="padding:8px 12px;border-bottom:1px solid var(--border-color);font-weight:600;">${name}</div>
-                    <a href="#dashboard" style="display:block;padding:8px 12px;color:var(--text-secondary);text-decoration:none;font-size:0.85rem;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">Dashboard</a>
-                    <a href="#" style="display:block;padding:8px 12px;color:var(--text-secondary);text-decoration:none;font-size:0.85rem;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'" onclick="signOut();return false;">Sign Out</a>
-                </div>
-            </div>
-        `;
-
-        // Update profile section
-        const userName = document.getElementById('user-name');
-        const userEmail = document.getElementById('user-email');
-        const userAvatar = document.getElementById('user-avatar');
-
-        if (userName) userName.textContent = name;
-        if (userEmail) userEmail.textContent = AppState.user.email || AppState.user.sub || 'Authenticated User';
-        if (userAvatar) userAvatar.src = avatar;
+    let btn = document.getElementById('auth-btn');
+    if (!btn) return;
+    if (state.authed && state.user) {
+        let name = state.user.name || 'User';
+        btn.textContent = name;
+        btn.onclick = () => { if (confirm('Sign out?')) { localStorage.removeItem('z02_auth'); location.reload(); } };
+        document.getElementById('prof-name').textContent = name;
+        document.getElementById('prof-email').textContent = state.user.email || '';
+        if (state.user.picture) document.getElementById('prof-avatar').src = state.user.picture;
     }
 }
 
-function toggleUserMenu() {
-    const dropdown = document.getElementById('user-dropdown');
-    if (dropdown) {
-        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-    }
-}
+function openAuth() { document.getElementById('auth-modal').classList.add('active'); }
+function closeAuth() { document.getElementById('auth-modal').classList.remove('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
 
-function openAuthModal() {
-    const modal = document.getElementById('auth-modal');
-    if (modal) modal.classList.add('active');
-}
-
-function closeAuthModal() {
-    const modal = document.getElementById('auth-modal');
-    if (modal) modal.classList.remove('active');
-}
-
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.classList.remove('active');
-}
-
-function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.classList.add('active');
-}
-
-// ============================================
-// Google OAuth 2.0
-// ============================================
-
-function signInWithGoogle() {
-    const state = btoa(JSON.stringify({ provider: 'Google', nonce: generateNonce() }));
-
-    const params = new URLSearchParams({
+function signInGoogle() {
+    let st = btoa(JSON.stringify({p: 'Google', n: Math.random().toString(36).slice(2)}));
+    let params = new URLSearchParams({
         client_id: CONFIG.GOOGLE_CLIENT_ID,
-        redirect_uri: CONFIG.GOOGLE_REDIRECT_URI,
+        redirect_uri: CONFIG.GOOGLE_REDIRECT,
         response_type: 'code',
         scope: GOOGLE_SCOPES.join(' '),
-        state: state,
+        state: st,
         access_type: 'offline',
         prompt: 'consent'
     });
-
-    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params;
 }
 
-// ============================================
-// Roblox OAuth 2.0
-// ============================================
-
-function signInWithRoblox() {
-    const state = btoa(JSON.stringify({ provider: 'Roblox', nonce: generateNonce() }));
-
-    const params = new URLSearchParams({
+function signInRoblox() {
+    let st = btoa(JSON.stringify({p: 'Roblox', n: Math.random().toString(36).slice(2)}));
+    let params = new URLSearchParams({
         client_id: CONFIG.ROBLOX_CLIENT_ID,
-        redirect_uri: CONFIG.ROBLOX_REDIRECT_URI,
+        redirect_uri: CONFIG.ROBLOX_REDIRECT,
         response_type: 'code',
         scope: ROBLOX_SCOPES.join(' '),
-        state: state
+        state: st
     });
-
-    window.location.href = `https://apis.roblox.com/oauth/v1/authorize?${params.toString()}`;
+    location.href = 'https://apis.roblox.com/oauth/v1/authorize?' + params;
 }
 
-// ============================================
-// Email Authentication (Mock)
-// ============================================
-
-function handleEmailAuth(event) {
-    event.preventDefault();
-    showToast('Email authentication coming soon!', 'info');
-    closeAuthModal();
-}
-
-function showRegister() {
-    showToast('Registration coming soon!', 'info');
-}
-
-function signOut() {
-    localStorage.removeItem('zurai02_auth');
-    AppState.user = null;
-    AppState.isAuthenticated = false;
-    location.reload();
-}
-
-function generateNonce() {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-}
-
-// ============================================
-// Third-Party Account Linking
-// ============================================
-
-function linkGoogle() {
-    if (!AppState.isAuthenticated) {
-        showToast('Please sign in first', 'warning');
-        openAuthModal();
-        return;
-    }
-    signInWithGoogle();
-}
-
-function linkRoblox() {
-    if (!AppState.isAuthenticated) {
-        showToast('Please sign in first', 'warning');
-        openAuthModal();
-        return;
-    }
-    signInWithRoblox();
-}
-
-function linkLinkvertise() {
-    if (!AppState.isAuthenticated) {
-        showToast('Please sign in first', 'warning');
-        openAuthModal();
-        return;
-    }
-    openModal('linkvertise-modal');
-}
-
-function confirmLinkvertise() {
-    const key = document.getElementById('linkvertise-key').value.trim();
-    if (!key) {
-        showToast('Please enter your Linkvertise API key', 'error');
-        return;
-    }
-
-    AppState.linkedAccounts.linkvertise = { key: key, linked: true, date: new Date().toISOString() };
-    localStorage.setItem('zurai02_links', JSON.stringify(AppState.linkedAccounts));
-
-    document.getElementById('linkvertise-status').textContent = 'Linked';
-    document.getElementById('linkvertise-status').classList.add('linked');
-    document.getElementById('btn-link-linkvertise').textContent = 'Unlink';
-    document.getElementById('btn-link-linkvertise').onclick = unlinkLinkvertise;
-
-    closeModal('linkvertise-modal');
-    showToast('Linkvertise account linked successfully!', 'success');
-}
-
-function unlinkLinkvertise() {
-    delete AppState.linkedAccounts.linkvertise;
-    localStorage.setItem('zurai02_links', JSON.stringify(AppState.linkedAccounts));
-
-    document.getElementById('linkvertise-status').textContent = 'Not Linked';
-    document.getElementById('linkvertise-status').classList.remove('linked');
-    document.getElementById('btn-link-linkvertise').textContent = 'Link';
-    document.getElementById('btn-link-linkvertise').onclick = linkLinkvertise;
-
-    showToast('Linkvertise account unlinked', 'info');
-}
-
-function linkLootLabs() {
-    if (!AppState.isAuthenticated) {
-        showToast('Please sign in first', 'warning');
-        openAuthModal();
-        return;
-    }
-    openModal('lootlabs-modal');
-}
-
-function confirmLootLabs() {
-    const key = document.getElementById('lootlabs-key').value.trim();
-    if (!key) {
-        showToast('Please enter your LootLabs API key', 'error');
-        return;
-    }
-
-    AppState.linkedAccounts.lootlabs = { key: key, linked: true, date: new Date().toISOString() };
-    localStorage.setItem('zurai02_links', JSON.stringify(AppState.linkedAccounts));
-
-    document.getElementById('lootlabs-status').textContent = 'Linked';
-    document.getElementById('lootlabs-status').classList.add('linked');
-    document.getElementById('btn-link-lootlabs').textContent = 'Unlink';
-    document.getElementById('btn-link-lootlabs').onclick = unlinkLootLabs;
-
-    closeModal('lootlabs-modal');
-    showToast('LootLabs account linked successfully!', 'success');
-}
-
-function unlinkLootLabs() {
-    delete AppState.linkedAccounts.lootlabs;
-    localStorage.setItem('zurai02_links', JSON.stringify(AppState.linkedAccounts));
-
-    document.getElementById('lootlabs-status').textContent = 'Not Linked';
-    document.getElementById('lootlabs-status').classList.remove('linked');
-    document.getElementById('btn-link-lootlabs').textContent = 'Link';
-    document.getElementById('btn-link-lootlabs').onclick = linkLootLabs;
-
-    showToast('LootLabs account unlinked', 'info');
-}
-
-// ============================================
-// Script Management
-// ============================================
-
-const DEMO_SCRIPTS = [
-    {
-        id: 1,
-        title: 'Auto Farm V2',
-        description: 'Advanced auto-farming script with anti-detection. Supports multiple games.',
-        category: 'game',
-        executions: 15420,
-        premium: true,
-        encrypted: true,
-        format: '.lz'
-    },
-    {
-        id: 2,
-        title: 'ESP & Wallhack',
-        description: 'See players through walls with customizable ESP options.',
-        category: 'utility',
-        executions: 8932,
-        premium: false,
-        encrypted: true,
-        format: '.lua'
-    },
-    {
-        id: 3,
-        title: 'Admin Commands',
-        description: 'Full admin command suite with kick, ban, teleport, and more.',
-        category: 'admin',
-        executions: 6781,
-        premium: true,
-        encrypted: true,
-        format: '.lz'
-    },
-    {
-        id: 4,
-        title: 'Speed Hack Pro',
-        description: 'Adjustable speed modifier with server sync protection.',
-        category: 'utility',
-        executions: 12453,
-        premium: false,
-        encrypted: true,
-        format: '.txt'
-    },
-    {
-        id: 5,
-        title: 'Aimbot Deluxe',
-        description: 'Precision aimbot with smooth aiming and FOV customization.',
-        category: 'game',
-        executions: 22105,
-        premium: true,
-        encrypted: true,
-        format: '.lz'
-    },
-    {
-        id: 6,
-        title: 'Server Crasher',
-        description: 'Advanced server management tools for admins. Use responsibly.',
-        category: 'admin',
-        executions: 3421,
-        premium: true,
-        encrypted: true,
-        format: '.lua'
-    }
-];
-
-function loadScripts() {
-    AppState.scripts = DEMO_SCRIPTS;
-    renderScripts();
-    updateScriptStats();
-}
-
-function renderScripts() {
-    const grid = document.getElementById('scripts-grid');
+// Scripts
+function renderScripts(filter) {
+    let grid = document.getElementById('script-grid');
     if (!grid) return;
-
-    const filtered = AppState.currentFilter === 'all' 
-        ? AppState.scripts 
-        : AppState.scripts.filter(s => s.category === AppState.currentFilter);
-
-    grid.innerHTML = filtered.map(script => `
-        <div class="script-card" data-category="${script.category}" data-id="${script.id}">
-            <div class="script-header">
-                <span class="script-title">${script.title}</span>
-                <span class="script-badge ${script.premium ? 'premium' : 'free'}">${script.premium ? 'PREMIUM' : 'FREE'}</span>
+    let list = filter === 'all' ? SCRIPTS : SCRIPTS.filter(s => s.cat === filter);
+    grid.innerHTML = list.map(s => `
+        <div class="scard" onclick="loadScript(${s.id})">
+            <div class="scard-head">
+                <span class="scard-title">${s.title}</span>
+                <span class="scard-badge ${s.prem ? 'premium' : 'free'}">${s.prem ? 'PREMIUM' : 'FREE'}</span>
             </div>
-            <p class="script-desc">${script.description}</p>
-            <div class="script-meta">
-                <span class="script-format">${script.format}</span>
-                <span class="script-executions">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 2l8 5-8 5V2z" fill="currentColor"/></svg>
-                    ${script.executions.toLocaleString()}
+            <p class="scard-desc">${s.desc}</p>
+            <div class="scard-meta">
+                <span>${s.fmt}</span>
+                <span class="scard-execs">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 1.5l7.5 4.5-7.5 4.5V1.5z" fill="currentColor"/></svg>
+                    ${s.execs.toLocaleString()}
                 </span>
             </div>
-            <div class="script-actions">
-                <button class="btn btn-primary" onclick="loadScriptToExecutor(${script.id})">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 2l8 5-8 5V2z" fill="currentColor"/></svg>
-                    Execute
-                </button>
-                <button class="btn btn-secondary" onclick="viewScriptDetails(${script.id})">
-                    Details
-                </button>
+            <div class="scard-btns">
+                <button class="btn btn-glow" onclick="event.stopPropagation(); loadScript(${s.id})">Execute</button>
+                <button class="btn btn-secondary" onclick="event.stopPropagation(); toast('${s.title}: ${s.execs.toLocaleString()} execs', 'ok')">Details</button>
             </div>
         </div>
     `).join('');
 }
 
-function updateScriptStats() {
-    const totalScripts = document.getElementById('total-scripts');
-    const totalExecs = document.getElementById('total-executions');
-
-    if (totalScripts) {
-        const count = AppState.scripts.length;
-        animateNumber(totalScripts, 0, count, 1000);
-    }
-
-    if (totalExecs) {
-        const total = AppState.scripts.reduce((sum, s) => sum + s.executions, 0);
-        animateNumber(totalExecs, 0, total, 1500);
-    }
+function setupFilters() {
+    document.querySelectorAll('.filter').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderScripts(btn.dataset.filter);
+        });
+    });
 }
 
-function animateNumber(element, start, end, duration) {
-    const startTime = performance.now();
-
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeProgress = 1 - Math.pow(1 - progress, 3);
-        const current = Math.floor(start + (end - start) * easeProgress);
-
-        element.textContent = current.toLocaleString();
-
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        }
-    }
-
-    requestAnimationFrame(update);
-}
-
-function loadScriptToExecutor(scriptId) {
-    const script = AppState.scripts.find(s => s.id === scriptId);
-    if (!script) return;
-
-    const input = document.getElementById('script-input');
+function loadScript(id) {
+    let s = SCRIPTS.find(x => x.id === id);
+    if (!s) return;
+    let input = document.getElementById('script-input');
     if (input) {
-        input.value = `-- [ENCRYPTED] ${script.title} (${script.format})
--- Executions: ${script.executions.toLocaleString()}
--- Category: ${script.category}
--- Premium: ${script.premium ? 'Yes' : 'No'}
-
--- This script is encrypted and can only be executed through a verified executor.
--- Direct browser access is rejected.
+        input.value = `-- [ENCRYPTED] ${s.title} (${s.fmt})
+-- Executions: ${s.execs.toLocaleString()}
+-- Category: ${s.cat}
 
 local zurai02 = require("zurai02.core")
 local auth = zurai02.authenticate()
 
 if not auth.verified then
-    return zurai02.reject("Unauthorized access attempt detected")
+    return zurai02.reject("Unauthorized - use verified executor")
 end
 
--- Loading encrypted payload...
 zurai02.execute(auth.payload)
 `;
     }
-
     document.getElementById('executor').scrollIntoView({ behavior: 'smooth' });
-    showToast(`Loaded "${script.title}" into executor`, 'success');
+    toast(`Loaded "${s.title}"`, 'ok');
 }
 
-function viewScriptDetails(scriptId) {
-    const script = AppState.scripts.find(s => s.id === scriptId);
-    if (!script) return;
-    showToast(`${script.title} - ${script.executions.toLocaleString()} executions`, 'info');
-}
+// Executor
+function runScript() {
+    let input = document.getElementById('script-input');
+    let status = document.getElementById('exec-status');
+    if (!input || !input.value.trim()) { toast('Enter a script first', 'warn'); return; }
+    if (!state.authed) { toast('Sign in to execute', 'warn'); openAuth(); return; }
 
-// ============================================
-// Script Execution
-// ============================================
+    status.innerHTML = '<span class="s-dot busy"></span>Executing...';
+    let script = input.value;
+    let now = () => new Date().toLocaleTimeString('en-US', { hour12: false });
 
-function executeScript() {
-    const input = document.getElementById('script-input');
-    const output = document.getElementById('output-content');
-    const status = document.getElementById('executor-status');
-
-    if (!input || !input.value.trim()) {
-        showToast('Please enter or upload a script first', 'warning');
-        return;
-    }
-
-    if (!AppState.isAuthenticated) {
-        showToast('Please sign in to execute scripts', 'warning');
-        openAuthModal();
-        return;
-    }
-
-    // Update status
-    if (status) {
-        status.innerHTML = '<span class="status-dot busy"></span> Executing...';
-    }
-
-    const script = input.value;
-    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
-
-    // Log execution start
-    addOutputLine(timestamp, 'Starting script execution...', 'system');
-
-    // Simulate execution steps
+    addOut(now(), 'Starting execution...', 'sys');
+    setTimeout(() => addOut(now(), 'Verifying executor signature...', 'sys'), 400);
+    setTimeout(() => addOut(now(), 'Decrypting payload...', 'sys'), 800);
     setTimeout(() => {
-        addOutputLine(new Date().toLocaleTimeString('en-US', { hour12: false }), 'Verifying executor signature...', 'system');
-    }, 500);
-
-    setTimeout(() => {
-        addOutputLine(new Date().toLocaleTimeString('en-US', { hour12: false }), 'Decrypting script payload...', 'system');
-    }, 1000);
-
-    setTimeout(() => {
-        // Check if script is encrypted/protected
         if (script.includes('[ENCRYPTED]') || script.includes('zurai02.authenticate')) {
-            addOutputLine(new Date().toLocaleTimeString('en-US', { hour12: false }), '✓ Script verified and decrypted successfully', 'success');
-            addOutputLine(new Date().toLocaleTimeString('en-US', { hour12: false }), '✓ Executor signature validated', 'success');
-            addOutputLine(new Date().toLocaleTimeString('en-US', { hour12: false }), '✓ Script executed successfully', 'success');
-
-            // Increment execution count
-            AppState.executionCount++;
-            localStorage.setItem('zurai02_exec_count', AppState.executionCount.toString());
-            updateExecutionCounter();
-            updateDashboard();
-
-            showToast('Script executed successfully!', 'success');
+            addOut(now(), '✓ Script verified and decrypted', 'ok');
+            addOut(now(), '✓ Executor signature valid', 'ok');
+            addOut(now(), '✓ Execution successful', 'ok');
+            state.execs++;
+            localStorage.setItem('z02_execs', state.execs);
+            updateCounters();
+            updateDash();
+            toast('Script executed!', 'ok');
         } else {
-            addOutputLine(new Date().toLocaleTimeString('en-US', { hour12: false }), '✗ Script rejected: Not encrypted or unauthorized', 'error');
-            addOutputLine(new Date().toLocaleTimeString('en-US', { hour12: false }), '✗ Browser execution is not permitted', 'error');
-            showToast('Script rejected - use a verified executor', 'error');
+            addOut(now(), '✗ Rejected: Not encrypted', 'err');
+            addOut(now(), '✗ Browser execution blocked', 'err');
+            toast('Use a verified executor', 'err');
         }
-
-        if (status) {
-            status.innerHTML = '<span class="status-dot ready"></span> Ready';
-        }
-    }, 2000);
+        status.innerHTML = '<span class="s-dot ready"></span>Ready';
+    }, 1500);
 }
 
 function validateScript() {
-    const input = document.getElementById('script-input');
-    if (!input || !input.value.trim()) {
-        showToast('Please enter a script to validate', 'warning');
-        return;
-    }
-
-    const script = input.value;
-    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
-
-    addOutputLine(timestamp, 'Validating script...', 'system');
-
+    let input = document.getElementById('script-input');
+    if (!input || !input.value.trim()) { toast('Enter a script to validate', 'warn'); return; }
+    let now = new Date().toLocaleTimeString('en-US', { hour12: false });
+    addOut(now, 'Validating...', 'sys');
     setTimeout(() => {
-        if (script.includes('[ENCRYPTED]') || script.includes('zurai02.authenticate')) {
-            addOutputLine(new Date().toLocaleTimeString('en-US', { hour12: false }), '✓ Script format valid', 'success');
-            addOutputLine(new Date().toLocaleTimeString('en-US', { hour12: false }), '✓ Encryption verified', 'success');
-            addOutputLine(new Date().toLocaleTimeString('en-US', { hour12: false }), '✓ Ready for execution', 'success');
-            showToast('Script validation passed', 'success');
+        if (input.value.includes('[ENCRYPTED]')) {
+            addOut(new Date().toLocaleTimeString('en-US', { hour12: false }), '✓ Valid encrypted script', 'ok');
+            toast('Validation passed', 'ok');
         } else {
-            addOutputLine(new Date().toLocaleTimeString('en-US', { hour12: false }), '⚠ Script is not encrypted', 'warning');
-            addOutputLine(new Date().toLocaleTimeString('en-US', { hour12: false }), '⚠ Browser access will be rejected', 'warning');
-            showToast('Script should be encrypted for security', 'warning');
+            addOut(new Date().toLocaleTimeString('en-US', { hour12: false }), '⚠ Not encrypted - will be rejected', 'warn');
+            toast('Script should be encrypted', 'warn');
         }
-    }, 1000);
+    }, 600);
 }
 
-function addOutputLine(time, text, type) {
-    const output = document.getElementById('output-content');
-    if (!output) return;
-
-    const line = document.createElement('div');
-    line.className = `output-line ${type}`;
-    line.innerHTML = `<span class="output-time">[${time}]</span><span class="output-text">${text}</span>`;
-    output.appendChild(line);
-    output.scrollTop = output.scrollHeight;
+function addOut(time, text, type) {
+    let box = document.getElementById('out-body');
+    if (!box) return;
+    let div = document.createElement('div');
+    div.className = 'out-line ' + type;
+    div.innerHTML = `<span class="time">[${time}]</span><span>${text}</span>`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
 }
 
 function clearOutput() {
-    const output = document.getElementById('output-content');
-    if (output) {
-        output.innerHTML = `
-            <div class="output-line system">
-                <span class="output-time">[${new Date().toLocaleTimeString('en-US', { hour12: false })}]</span>
-                <span class="output-text">Console cleared.</span>
-            </div>
-        `;
-    }
+    let box = document.getElementById('out-body');
+    if (box) box.innerHTML = `<div class="out-line sys"><span class="time">[${new Date().toLocaleTimeString('en-US', { hour12: false })}]</span><span>Console cleared</span></div>`;
 }
 
-function clearExecutor() {
-    const input = document.getElementById('script-input');
+function clearInput() {
+    let input = document.getElementById('script-input');
     if (input) input.value = '';
-    showToast('Executor cleared', 'info');
 }
 
-function handleFileUpload(event) {
-    const file = event.target.files[0];
+function handleFile(e) {
+    let file = e.target.files[0];
     if (!file) return;
+    let ext = '.' + file.name.split('.').pop().toLowerCase();
+    if (!['.lz', '.lua', '.txt'].includes(ext)) { toast('Only .lz, .lua, .txt files', 'err'); return; }
+    let reader = new FileReader();
+    reader.onload = (ev) => {
+        let input = document.getElementById('script-input');
+        if (input) input.value = `-- Uploaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)
 
-    const allowedExtensions = ['.lz', '.lua', '.txt'];
-    const ext = '.' + file.name.split('.').pop().toLowerCase();
-
-    if (!allowedExtensions.includes(ext)) {
-        showToast('Invalid file type. Only .lz, .lua, and .txt files are supported.', 'error');
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const input = document.getElementById('script-input');
-        if (input) {
-            input.value = `-- Uploaded: ${file.name}
--- Size: ${(file.size / 1024).toFixed(2)} KB
--- Format: ${ext}
-
-${e.target.result}`;
-        }
-        showToast(`Loaded ${file.name} successfully`, 'success');
+${ev.target.result}`;
+        toast(`Loaded ${file.name}`, 'ok');
     };
     reader.readAsText(file);
 }
 
-// ============================================
-// Execution Counter
-// ============================================
-
-function updateExecutionCounter() {
-    const counter = document.getElementById('exec-count');
-    if (counter) {
-        counter.textContent = AppState.executionCount.toLocaleString();
-    }
-}
-
-// ============================================
 // Dashboard
-// ============================================
+function updateCounters() {
+    let el = document.getElementById('exec-count');
+    if (el) el.textContent = state.execs.toLocaleString();
+}
 
-function updateDashboard() {
-    const userExecs = document.getElementById('user-executions');
-    const userScripts = document.getElementById('user-scripts');
+function updateDash() {
+    let e = document.getElementById('user-execs');
+    let s = document.getElementById('user-scripts');
+    if (e) e.textContent = state.execs;
+    if (s) s.textContent = SCRIPTS.filter(x => x.execs > 0).length;
 
-    if (userExecs) userExecs.textContent = AppState.executionCount;
-    if (userScripts) userScripts.textContent = AppState.scripts.filter(s => s.executions > 0).length;
-
-    // Update linked account statuses
-    if (AppState.linkedAccounts.linkvertise) {
-        const status = document.getElementById('linkvertise-status');
-        const btn = document.getElementById('btn-link-linkvertise');
-        if (status) { status.textContent = 'Linked'; status.classList.add('linked'); }
-        if (btn) { btn.textContent = 'Unlink'; btn.onclick = unlinkLinkvertise; }
-    }
-
-    if (AppState.linkedAccounts.lootlabs) {
-        const status = document.getElementById('lootlabs-status');
-        const btn = document.getElementById('btn-link-lootlabs');
-        if (status) { status.textContent = 'Linked'; status.classList.add('linked'); }
-        if (btn) { btn.textContent = 'Unlink'; btn.onclick = unlinkLootLabs; }
-    }
-
-    if (AppState.isAuthenticated) {
-        const googleStatus = document.getElementById('google-status');
-        const robloxStatus = document.getElementById('roblox-status');
-
-        if (googleStatus && AppState.user && AppState.user.provider === 'Google') {
-            googleStatus.textContent = 'Linked';
-            googleStatus.classList.add('linked');
-        }
-        if (robloxStatus && AppState.user && AppState.user.provider === 'Roblox') {
-            robloxStatus.textContent = 'Linked';
-            robloxStatus.classList.add('linked');
-        }
+    if (state.links.lv) { document.getElementById('st-lv').textContent = 'Linked'; document.getElementById('st-lv').classList.add('linked'); document.getElementById('btn-lv').textContent = 'Unlink'; document.getElementById('btn-lv').onclick = () => { delete state.links.lv; localStorage.setItem('z02_links', JSON.stringify(state.links)); location.reload(); }; }
+    if (state.links.ll) { document.getElementById('st-ll').textContent = 'Linked'; document.getElementById('st-ll').classList.add('linked'); document.getElementById('btn-ll').textContent = 'Unlink'; document.getElementById('btn-ll').onclick = () => { delete state.links.ll; localStorage.setItem('z02_links', JSON.stringify(state.links)); location.reload(); }; }
+    if (state.authed) {
+        if (state.user && state.user.provider === 'Google') { document.getElementById('st-google').textContent = 'Linked'; document.getElementById('st-google').classList.add('linked'); }
+        if (state.user && state.user.provider === 'Roblox') { document.getElementById('st-roblox').textContent = 'Linked'; document.getElementById('st-roblox').classList.add('linked'); }
     }
 }
 
-// ============================================
-// UI Utilities
-// ============================================
+// Linking
+function linkGoogle() { if (!state.authed) { toast('Sign in first', 'warn'); openAuth(); return; } signInGoogle(); }
+function linkRoblox() { if (!state.authed) { toast('Sign in first', 'warn'); openAuth(); return; } signInRoblox(); }
+function linkLV() { if (!state.authed) { toast('Sign in first', 'warn'); openAuth(); return; } document.getElementById('lv-modal').classList.add('active'); }
+function linkLL() { if (!state.authed) { toast('Sign in first', 'warn'); openAuth(); return; } document.getElementById('ll-modal').classList.add('active'); }
 
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-
-    const icons = {
-        success: '✓',
-        error: '✗',
-        warning: '⚠',
-        info: 'ℹ'
-    };
-
-    toast.innerHTML = `<span style="font-weight:700;">${icons[type]}</span> ${message}`;
-    container.appendChild(toast);
-
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
+function confirmLV() {
+    let key = document.getElementById('lv-key').value.trim();
+    if (!key) { toast('Enter API key', 'err'); return; }
+    state.links.lv = { key: key, date: Date.now() };
+    localStorage.setItem('z02_links', JSON.stringify(state.links));
+    closeModal('lv-modal');
+    toast('Linkvertise linked!', 'ok');
+    updateDash();
 }
 
-function scrollToScripts() {
-    document.getElementById('scripts').scrollIntoView({ behavior: 'smooth' });
+function confirmLL() {
+    let key = document.getElementById('ll-key').value.trim();
+    if (!key) { toast('Enter API key', 'err'); return; }
+    state.links.ll = { key: key, date: Date.now() };
+    localStorage.setItem('z02_links', JSON.stringify(state.links));
+    closeModal('ll-modal');
+    toast('LootLabs linked!', 'ok');
+    updateDash();
 }
 
-function openExecutor() {
-    document.getElementById('executor').scrollIntoView({ behavior: 'smooth' });
+// Toast
+function toast(msg, type) {
+    let box = document.getElementById('toast-box');
+    if (!box) return;
+    let t = document.createElement('div');
+    t.className = 'toast ' + type;
+    let icon = type === 'ok' ? '✓' : type === 'err' ? '✗' : '⚠';
+    t.innerHTML = `<b>${icon}</b> ${msg}`;
+    box.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; setTimeout(() => t.remove(), 300); }, 3500);
 }
 
-function animateStats() {
-    const activeUsers = document.getElementById('active-users');
-    if (activeUsers) {
-        animateNumber(activeUsers, 0, 1247, 2000);
+// Animations
+function animateNumbers() {
+    animateNum('total-scripts', 0, SCRIPTS.length, 1000);
+    animateNum('total-executions', 0, SCRIPTS.reduce((a, s) => a + s.execs, 0), 1500);
+    animateNum('active-users', 0, 1247, 2000);
+}
+
+function animateNum(id, start, end, dur) {
+    let el = document.getElementById(id);
+    if (!el) return;
+    let t0 = performance.now();
+    function step(t) {
+        let p = Math.min((t - t0) / dur, 1);
+        let ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.floor(start + (end - start) * ease).toLocaleString();
+        if (p < 1) requestAnimationFrame(step);
     }
-}
-
-// ============================================
-// Event Listeners
-// ============================================
-
-function setupEventListeners() {
-    // Filter buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            AppState.currentFilter = this.dataset.filter;
-            renderScripts();
-        });
-    });
-
-    // Close modals on overlay click
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-        overlay.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.remove('active');
-            }
-        });
-    });
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
-        }
-    });
-
-    // Navbar scroll effect
-    window.addEventListener('scroll', function() {
-        const navbar = document.querySelector('.navbar');
-        if (navbar) {
-            if (window.scrollY > 50) {
-                navbar.style.background = 'rgba(10, 10, 15, 0.95)';
-                navbar.style.backdropFilter = 'blur(20px)';
-            } else {
-                navbar.style.background = 'rgba(10, 10, 15, 0.8)';
-            }
-        }
-    });
-}
-
-// ============================================
-// Script Encryption / Decryption Utilities
-// ============================================
-
-const ScriptCrypto = {
-    // Simple XOR encryption for demo (use proper crypto in production)
-    encrypt: function(text, key) {
-        let result = '';
-        for (let i = 0; i < text.length; i++) {
-            result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-        }
-        return btoa(result);
-    },
-
-    decrypt: function(encrypted, key) {
-        try {
-            const text = atob(encrypted);
-            let result = '';
-            for (let i = 0; i < text.length; i++) {
-                result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-            }
-            return result;
-        } catch (e) {
-            return null;
-        }
-    },
-
-    // Verify if script is from verified executor
-    verifyExecutor: function(signature) {
-        // In production, verify against known executor signatures
-        const validSignatures = [
-            'zurai02-executor-v2',
-            'synapse-x-compatible',
-            'krnl-verified'
-        ];
-        return validSignatures.includes(signature);
-    },
-
-    // Reject browser access
-    rejectBrowserAccess: function() {
-        return {
-            error: true,
-            code: 'BROWSER_ACCESS_REJECTED',
-            message: 'This script can only be executed through a verified executor. Browser access is not permitted.',
-            timestamp: new Date().toISOString()
-        };
-    }
-};
-
-// ============================================
-// Export for global access
-// ============================================
-
-window.AppState = AppState;
-window.CONFIG = CONFIG;
-window.ScriptCrypto = ScriptCrypto;
+    requestAnimationFrame(step);
+          }
