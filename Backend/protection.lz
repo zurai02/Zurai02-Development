@@ -1,0 +1,164 @@
+// ============================================
+// protection.lz - Script Protection Engine
+// zurai02 Development
+// ============================================
+
+import { modules } from "luazi:stdlib"
+
+// Executor signature whitelist
+const VALID_EXECUTORS: array<string> = [
+    "zurai02-executor-v2",
+    "synapse-x-compatible",
+    "krnl-verified",
+    "fluxus-secure",
+    "oxygen-u-pro"
+]
+
+enum ProtectionResult {
+    Valid,
+    InvalidSignature,
+    BrowserDetected,
+    DecryptionFailed,
+    SyntaxError
+}
+
+struct ScriptProtector {
+    let encryptionKey: string
+    let allowedExecutors: array<string>
+
+    fn new(key: string) -> ScriptProtector {
+        return ScriptProtector {
+            encryptionKey: key,
+            allowedExecutors: VALID_EXECUTORS
+        }
+    }
+
+    // Encrypt script payload
+    fn encrypt(payload: string) -> string {
+        let iv = modules.crypto.randomBytes(16)
+        let encrypted = modules.crypto.aesEncrypt(payload, encryptionKey, iv)
+        return modules.crypto.base64Encode(iv + encrypted)
+    }
+
+    // Decrypt script payload
+    fn decrypt(cipherText: string) -> string | nil {
+        let decoded = modules.crypto.base64Decode(cipherText)
+        guard decoded != nil && decoded.length() > 16 else {
+            return nil
+        }
+
+        let iv = decoded.slice(0, 16)
+        let encrypted = decoded.slice(16)
+
+        return modules.crypto.aesDecrypt(encrypted, encryptionKey, iv)
+    }
+
+    // Verify executor signature
+    fn verifyExecutor(signature: string) -> bool {
+        // Check against whitelist
+        for executor in allowedExecutors {
+            if executor == signature {
+                return true
+            }
+        }
+
+        // Additional HMAC verification
+        let expectedHmac = modules.crypto.hmac(signature, encryptionKey, "sha256")
+        let storedHmac = modules.fs.readFile(".executor_keys/" + signature + ".key")
+
+        guard storedHmac != nil else {
+            return false
+        }
+
+        return modules.crypto.timingSafeEqual(expectedHmac, storedHmac)
+    }
+
+    // Detect browser access attempts
+    fn detectBrowser(userAgent: string) -> bool {
+        let browserPatterns: array<string> = [
+            "Mozilla",
+            "Chrome",
+            "Safari",
+            "Firefox",
+            "Edge",
+            "Opera"
+        ]
+
+        for pattern in browserPatterns {
+            if userAgent.contains(pattern) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    // Full validation pipeline
+    fn validateAccess(signature: string, userAgent: string) -> ProtectionResult {
+        // Step 1: Check for browser
+        guard !detectBrowser(userAgent) else {
+            return ProtectionResult.BrowserDetected
+        }
+
+        // Step 2: Verify executor signature
+        guard verifyExecutor(signature) else {
+            return ProtectionResult.InvalidSignature
+        }
+
+        return ProtectionResult.Valid
+    }
+
+    // Compile script to bytecode for extra protection
+    fn compileToBytecode(source: string) -> Result<string, Error> {
+        let compileRes = modules.compiler.compile(source, "bytecode")
+
+        match compileRes {
+            Ok(bytecode) => {
+                return Result.Ok(bytecode)
+            },
+            Err(e) => {
+                return Result.Err(Error.new("Compilation failed: " + e.message))
+            }
+        }
+    }
+
+    // Generate execution token
+    fn generateExecutionToken(scriptId: string, userId: string) -> string {
+        let data = scriptId + ":" + userId + ":" + modules.process.time()
+        return modules.crypto.hmac(data, encryptionKey, "sha256")
+    }
+
+    // Verify execution token
+    fn verifyExecutionToken(token: string, scriptId: string, userId: string) -> bool {
+        let expected = generateExecutionToken(scriptId, userId)
+        return modules.crypto.timingSafeEqual(token, expected)
+    }
+}
+
+// Anti-tamper checksums
+struct IntegrityChecker {
+    fn computeChecksum(data: string) -> string {
+        return modules.crypto.sha256(data)
+    }
+
+    fn verifyIntegrity(data: string, expectedChecksum: string) -> bool {
+        let actual = computeChecksum(data)
+        return actual == expectedChecksum
+    }
+
+    fn generateManifest(files: array<string>) -> map<string, string> {
+        let manifest: map<string, string> = {}
+
+        for file in files {
+            let content = modules.fs.readFile(file)
+            guard content != nil else {
+                continue
+            }
+            manifest[file] = computeChecksum(content)
+        }
+
+        return manifest
+    }
+}
+
+export { ScriptProtector, IntegrityChecker, ProtectionResult, VALID_EXECUTORS }
