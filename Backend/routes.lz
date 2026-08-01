@@ -1,0 +1,338 @@
+// ============================================
+// routes.lz - API Route Definitions
+// zurai02 Development
+// ============================================
+
+import { modules } from "luazi:stdlib"
+import { AuthConfig, SessionManager } from "./auth.lz"
+import { ScriptProtector } from "./protection.lz"
+
+struct ApiRouter {
+    let server: modules.http.Server
+    let sessionManager: SessionManager
+    let protector: ScriptProtector
+    let db: modules.fs.Database
+
+    fn registerRoutes() {
+        // Health & Stats
+        server.get("/api/health", handleHealth)
+        server.get("/api/stats", handleStats)
+        server.get("/api/stats/executions", handleExecutionStats)
+
+        // Authentication
+        server.post("/api/auth/roblox", handleRobloxAuth)
+        server.post("/api/auth/google", handleGoogleAuth)
+        server.post("/api/auth/logout", handleLogout)
+        server.get("/api/auth/session", handleGetSession)
+
+        // Scripts
+        server.get("/api/scripts", handleListScripts)
+        server.get("/api/scripts/:id", handleGetScript)
+        server.post("/api/scripts", handleCreateScript)
+        server.delete("/api/scripts/:id", handleDeleteScript)
+
+        // Execution
+        server.post("/api/execute", handleExecute)
+        server.post("/api/validate", handleValidate)
+        server.get("/api/execute/history", handleExecutionHistory)
+
+        // User
+        server.get("/api/user/:id", handleGetUser)
+        server.get("/api/user/:id/executions", handleUserExecutions)
+        server.patch("/api/user/:id", handleUpdateUser)
+
+        // Linking
+        server.post("/api/link", handleLinkAccount)
+        server.delete("/api/link/:provider", handleUnlinkAccount)
+        server.get("/api/link/:userId", handleGetLinkedAccounts)
+
+        // Monetization
+        server.get("/api/monetize/linkvertise/:userId", handleLinkvertiseStats)
+        server.get("/api/monetize/lootlabs/:userId", handleLootLabsStats)
+    }
+}
+
+// Route handlers
+fn handleHealth(req: modules.http.Request, res: modules.http.Response) {
+    res.json({
+        status: "healthy",
+        version: "2.0.0",
+        timestamp: modules.process.time(),
+        uptime: modules.process.uptime()
+    })
+}
+
+fn handleStats(req: modules.http.Request, res: modules.http.Response) {
+    let stats = db.queryOne(`
+        SELECT 
+            (SELECT COUNT(*) FROM users) as total_users,
+            (SELECT COUNT(*) FROM scripts) as total_scripts,
+            (SELECT SUM(executions) FROM scripts) as total_executions,
+            (SELECT COUNT(*) FROM execution_logs WHERE timestamp > ?) as recent_executions
+    `, modules.process.time() - 86400)
+
+    res.json({
+        users: stats.total_users,
+        scripts: stats.total_scripts,
+        totalExecutions: stats.total_executions | 0,
+        dailyExecutions: stats.recent_executions,
+        serverTime: modules.process.time()
+    })
+}
+
+fn handleExecutionStats(req: modules.http.Request, res: modules.http.Response) {
+    let history = db.query(`
+        SELECT 
+            DATE(timestamp, 'unixepoch') as date,
+            COUNT(*) as count
+        FROM execution_logs
+        WHERE timestamp > ?
+        GROUP BY date
+        ORDER BY date DESC
+        LIMIT 30
+    `, modules.process.time() - 2592000)
+
+    res.json({ history: history })
+}
+
+fn handleRobloxAuth(req: modules.http.Request, res: modules.http.Response) {
+    // Implementation in server.lz
+}
+
+fn handleGoogleAuth(req: modules.http.Request, res: modules.http.Response) {
+    // Implementation in server.lz
+}
+
+fn handleLogout(req: modules.http.Request, res: modules.http.Response) {
+    let token = req.headers["Authorization"]
+    guard token != nil else {
+        res.status(401).json({ error: "No token provided" })
+        return
+    }
+
+    sessionManager.remove(token)
+    res.json({ success: true, message: "Logged out successfully" })
+}
+
+fn handleGetSession(req: modules.http.Request, res: modules.http.Response) {
+    let token = req.headers["Authorization"]
+    guard token != nil else {
+        res.status(401).json({ error: "No token provided" })
+        return
+    }
+
+    let session = sessionManager.get(token)
+    guard session != nil else {
+        res.status(401).json({ error: "Invalid or expired session" })
+        return
+    }
+
+    res.json({
+        id: session.id,
+        userId: session.userId,
+        provider: session.provider,
+        expiresAt: session.expiresAt
+    })
+}
+
+fn handleListScripts(req: modules.http.Request, res: modules.http.Response) {
+    let category = req.query.category | "all"
+    let page = req.query.page | 1
+    let limit = req.query.limit | 20
+    let offset = (page - 1) * limit
+
+    let query = category == "all" 
+        ? "SELECT * FROM scripts ORDER BY executions DESC LIMIT ? OFFSET ?"
+        : "SELECT * FROM scripts WHERE category = ? ORDER BY executions DESC LIMIT ? OFFSET ?"
+
+    let rows = category == "all"
+        ? db.query(query, limit, offset)
+        : db.query(query, category, limit, offset)
+
+    let scripts: array<map> = []
+    for row in rows {
+        scripts.push({
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            category: row.category,
+            format: row.format,
+            executions: row.executions,
+            premium: row.premium == 1,
+            createdAt: row.created_at
+        })
+    }
+
+    res.json({ scripts: scripts, page: page, limit: limit })
+}
+
+fn handleGetScript(req: modules.http.Request, res: modules.http.Response) {
+    let id = req.params.id
+    let row = db.queryOne("SELECT * FROM scripts WHERE id = ?", id)
+
+    guard row != nil else {
+        res.status(404).json({ error: "Script not found" })
+        return
+    }
+
+    // Never return encrypted payload - only metadata
+    res.json({
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        category: row.category,
+        format: row.format,
+        executions: row.executions,
+        premium: row.premium == 1,
+        createdAt: row.created_at
+    })
+}
+
+fn handleCreateScript(req: modules.http.Request, res: modules.http.Response) {
+    let body = req.body
+    guard body.title != nil && body.payload != nil else {
+        res.status(400).json({ error: "Missing required fields" })
+        return
+    }
+
+    let encrypted = protector.encrypt(body.payload)
+    let scriptId = modules.crypto.randomUUID()
+
+    db.execute(`
+        INSERT INTO scripts (id, title, description, category, format, encrypted_payload, owner_id, executions, premium, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
+    `, scriptId, body.title, body.description | "", body.category | "general", body.format | ".lz",
+        encrypted, body.userId, body.premium ? 1 : 0, modules.process.time())
+
+    res.status(201).json({ id: scriptId, message: "Script created successfully" })
+}
+
+fn handleDeleteScript(req: modules.http.Request, res: modules.http.Response) {
+    let id = req.params.id
+    let userId = req.headers["X-User-Id"]
+
+    db.execute("DELETE FROM scripts WHERE id = ? AND owner_id = ?", id, userId)
+    res.json({ success: true, message: "Script deleted" })
+}
+
+fn handleExecute(req: modules.http.Request, res: modules.http.Response) {
+    // Full implementation in server.lz
+}
+
+fn handleValidate(req: modules.http.Request, res: modules.http.Response) {
+    let payload = req.body.payload
+    guard payload != nil else {
+        res.status(400).json({ error: "Missing payload" })
+        return
+    }
+
+    let decrypted = protector.decrypt(payload)
+    guard decrypted != nil else {
+        res.status(400).json({ valid: false, error: "Decryption failed" })
+        return
+    }
+
+    let syntaxCheck = modules.compiler.validate(decrypted)
+    match syntaxCheck {
+        Ok(_) => {
+            res.json({ valid: true, message: "Script is valid" })
+        },
+        Err(e) => {
+            res.status(400).json({ valid: false, error: e.message })
+        }
+    }
+}
+
+fn handleExecutionHistory(req: modules.http.Request, res: modules.http.Response) {
+    let userId = req.query.userId
+    let limit = req.query.limit | 50
+
+    let rows = userId != nil
+        ? db.query("SELECT * FROM execution_logs WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?", userId, limit)
+        : db.query("SELECT * FROM execution_logs ORDER BY timestamp DESC LIMIT ?", limit)
+
+    res.json({ logs: rows })
+}
+
+fn handleGetUser(req: modules.http.Request, res: modules.http.Response) {
+    let id = req.params.id
+    let row = db.queryOne("SELECT * FROM users WHERE id = ?", id)
+
+    guard row != nil else {
+        res.status(404).json({ error: "User not found" })
+        return
+    }
+
+    res.json({
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        avatar: row.avatar,
+        provider: row.provider,
+        createdAt: row.created_at,
+        lastLogin: row.last_login
+    })
+}
+
+fn handleUserExecutions(req: modules.http.Request, res: modules.http.Response) {
+    let userId = req.params.id
+    let count = db.queryOne("SELECT COUNT(*) as count FROM execution_logs WHERE user_id = ?", userId).count
+    res.json({ userId: userId, executions: count })
+}
+
+fn handleUpdateUser(req: modules.http.Request, res: modules.http.Response) {
+    let id = req.params.id
+    let body = req.body
+
+    db.execute(`
+        UPDATE users SET name = COALESCE(?, name), avatar = COALESCE(?, avatar)
+        WHERE id = ?
+    `, body.name, body.avatar, id)
+
+    res.json({ success: true, message: "User updated" })
+}
+
+fn handleLinkAccount(req: modules.http.Request, res: modules.http.Response) {
+    let body = req.body
+    guard body.userId != nil && body.provider != nil && body.apiKey != nil else {
+        res.status(400).json({ error: "Missing required fields" })
+        return
+    }
+
+    let encryptedKey = modules.crypto.aesEncrypt(body.apiKey, "link-encryption-key", modules.crypto.randomBytes(16))
+
+    db.execute(`
+        INSERT OR REPLACE INTO linked_accounts (user_id, provider, api_key, linked_at)
+        VALUES (?, ?, ?, ?)
+    `, body.userId, body.provider, encryptedKey, modules.process.time())
+
+    res.json({ success: true, provider: body.provider })
+}
+
+fn handleUnlinkAccount(req: modules.http.Request, res: modules.http.Response) {
+    let userId = req.headers["X-User-Id"]
+    let provider = req.params.provider
+
+    db.execute("DELETE FROM linked_accounts WHERE user_id = ? AND provider = ?", userId, provider)
+    res.json({ success: true, message: provider + " unlinked" })
+}
+
+fn handleGetLinkedAccounts(req: modules.http.Request, res: modules.http.Response) {
+    let userId = req.params.userId
+    let rows = db.query("SELECT provider, linked_at FROM linked_accounts WHERE user_id = ?", userId)
+    res.json({ accounts: rows })
+}
+
+fn handleLinkvertiseStats(req: modules.http.Request, res: modules.http.Response) {
+    let userId = req.params.userId
+    // Integration with Linkvertise API would go here
+    res.json({ provider: "linkvertise", stats: "coming soon" })
+}
+
+fn handleLootLabsStats(req: modules.http.Request, res: modules.http.Response) {
+    let userId = req.params.userId
+    // Integration with LootLabs API would go here
+    res.json({ provider: "lootlabs", stats: "coming soon" })
+}
+
+export { ApiRouter, handleHealth, handleStats }
