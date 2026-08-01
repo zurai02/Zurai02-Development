@@ -1,0 +1,222 @@
+// ============================================
+// auth.lz - Authentication Module
+// zurai02 Development
+// ============================================
+
+import { modules } from "luazi:stdlib"
+
+struct AuthConfig {
+    robloxClientId: string,
+    googleClientId: string,
+    redirectUri: string,
+    tokenExpiry: number
+}
+
+enum AuthProvider {
+    Roblox,
+    Google,
+    Email
+}
+
+struct Session {
+    id: string,
+    userId: string,
+    provider: AuthProvider,
+    accessToken: string,
+    refreshToken: string | nil,
+    expiresAt: number,
+    createdAt: number
+}
+
+trait Authenticator {
+    fn authenticate(code: string) -> Result<Session, Error>
+    fn refresh(session: Session) -> Result<Session, Error>
+    fn validate(token: string) -> Result<bool, Error>
+}
+
+struct RobloxAuth implements Authenticator {
+    let config: AuthConfig
+
+    fn authenticate(code: string) -> Result<Session, Error> {
+        let tokenRes = modules.http.post("https://apis.roblox.com/oauth/v1/token", {
+            grant_type: "authorization_code",
+            code: code,
+            client_id: config.robloxClientId,
+            redirect_uri: config.redirectUri
+        })
+
+        match tokenRes {
+            Ok(data) => {
+                let session = Session {
+                    id: modules.crypto.randomUUID(),
+                    userId: "roblox_" + data.sub,
+                    provider: AuthProvider.Roblox,
+                    accessToken: data.access_token,
+                    refreshToken: data.refresh_token | nil,
+                    expiresAt: modules.process.time() + data.expires_in,
+                    createdAt: modules.process.time()
+                }
+                return Result.Ok(session)
+            },
+            Err(e) => return Result.Err(e)
+        }
+    }
+
+    fn refresh(session: Session) -> Result<Session, Error> {
+        guard session.refreshToken != nil else {
+            return Result.Err(Error.new("No refresh token available"))
+        }
+
+        let tokenRes = modules.http.post("https://apis.roblox.com/oauth/v1/token", {
+            grant_type: "refresh_token",
+            refresh_token: session.refreshToken,
+            client_id: config.robloxClientId
+        })
+
+        match tokenRes {
+            Ok(data) => {
+                session.accessToken = data.access_token
+                session.expiresAt = modules.process.time() + data.expires_in
+                return Result.Ok(session)
+            },
+            Err(e) => return Result.Err(e)
+        }
+    }
+
+    fn validate(token: string) -> Result<bool, Error> {
+        let res = modules.http.get("https://apis.roblox.com/oauth/v1/token/introspection", {
+            token: token
+        })
+
+        match res {
+            Ok(data) => return Result.Ok(data.active),
+            Err(e) => return Result.Err(e)
+        }
+    }
+}
+
+struct GoogleAuth implements Authenticator {
+    let config: AuthConfig
+
+    fn authenticate(code: string) -> Result<Session, Error> {
+        let tokenRes = modules.http.post("https://oauth2.googleapis.com/token", {
+            grant_type: "authorization_code",
+            code: code,
+            client_id: config.googleClientId,
+            redirect_uri: config.redirectUri
+        })
+
+        match tokenRes {
+            Ok(data) => {
+                let session = Session {
+                    id: modules.crypto.randomUUID(),
+                    userId: "google_" + data.id_token,
+                    provider: AuthProvider.Google,
+                    accessToken: data.access_token,
+                    refreshToken: data.refresh_token | nil,
+                    expiresAt: modules.process.time() + data.expires_in,
+                    createdAt: modules.process.time()
+                }
+                return Result.Ok(session)
+            },
+            Err(e) => return Result.Err(e)
+        }
+    }
+
+    fn refresh(session: Session) -> Result<Session, Error> {
+        guard session.refreshToken != nil else {
+            return Result.Err(Error.new("No refresh token available"))
+        }
+
+        let tokenRes = modules.http.post("https://oauth2.googleapis.com/token", {
+            grant_type: "refresh_token",
+            refresh_token: session.refreshToken,
+            client_id: config.googleClientId
+        })
+
+        match tokenRes {
+            Ok(data) => {
+                session.accessToken = data.access_token
+                session.expiresAt = modules.process.time() + data.expires_in
+                return Result.Ok(session)
+            },
+            Err(e) => return Result.Err(e)
+        }
+    }
+
+    fn validate(token: string) -> Result<bool, Error> {
+        let res = modules.http.get("https://oauth2.googleapis.com/tokeninfo", {
+            access_token: token
+        })
+
+        match res {
+            Ok(data) => {
+                let expired = data.expires_in != nil && data.expires_in <= 0
+                return Result.Ok(!expired)
+            },
+            Err(e) => return Result.Err(e)
+        }
+    }
+}
+
+// Session manager with automatic cleanup
+struct SessionManager {
+    let sessions: map<string, Session>
+    let cleanupInterval: number
+
+    fn new() -> SessionManager {
+        let manager = SessionManager {
+            sessions: {},
+            cleanupInterval: 3600000  // 1 hour
+        }
+
+        // Start cleanup timer
+        modules.process.setInterval(fn() {
+            manager.cleanup()
+        }, manager.cleanupInterval)
+
+        return manager
+    }
+
+    fn add(session: Session) {
+        sessions[session.id] = session
+    }
+
+    fn get(sessionId: string) -> Session | nil {
+        let session = sessions[sessionId]
+        guard session != nil else {
+            return nil
+        }
+
+        // Check expiry
+        if session.expiresAt < modules.process.time() {
+            sessions.remove(sessionId)
+            return nil
+        }
+
+        return session
+    }
+
+    fn remove(sessionId: string) {
+        sessions.remove(sessionId)
+    }
+
+    fn cleanup() {
+        let now = modules.process.time()
+        let expired: array<string> = []
+
+        for id, session in sessions {
+            if session.expiresAt < now {
+                expired.push(id)
+            }
+        }
+
+        for id in expired {
+            sessions.remove(id)
+        }
+
+        print("Cleaned up " + expired.length() + " expired sessions")
+    }
+}
+
+export { AuthConfig, AuthProvider, Session, Authenticator, RobloxAuth, GoogleAuth, SessionManager }
