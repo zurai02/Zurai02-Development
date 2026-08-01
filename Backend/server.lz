@@ -1,0 +1,846 @@
+// ============================================
+// zurai02 Backend Server
+// Written in Luazi - Real Luazi backend
+// Compiles to Node.js via C# or WAT target
+// ============================================
+
+import { modules } from "luazi:stdlib"
+
+// Configuration constants
+const PORT: number = 8080
+const HOST: string = "0.0.0.0"
+const ROBLOX_CLIENT_ID: string = "3255755288279625071"
+const GOOGLE_CLIENT_ID: string = "870510440840-1akk1vvbiqik864jip7pc4al3hmnki1s.apps.googleusercontent.com"
+const REDIRECT_URI: string = "https://zurai02.is-a.dev/redirect.html"
+
+// Database connection (using luazi stdlib)
+let db = modules.fs.openDatabase("zurai02_db.sqlite")
+
+// ============================================
+// Data Structures
+// ============================================
+
+struct User {
+    id: string,
+    email: string,
+    name: string,
+    avatar: string,
+    provider: string,
+    robloxId: string | nil,
+    googleId: string | nil,
+    createdAt: number,
+    lastLogin: number
+}
+
+struct Script {
+    id: string,
+    title: string,
+    description: string,
+    category: string,
+    format: string,
+    encryptedPayload: string,
+    ownerId: string,
+    executions: number,
+    premium: bool,
+    createdAt: number
+}
+
+struct ExecutionLog {
+    id: string,
+    scriptId: string,
+    userId: string,
+    executorSignature: string,
+    success: bool,
+    timestamp: number,
+    ipAddress: string
+}
+
+struct LinkedAccount {
+    userId: string,
+    provider: string,
+    apiKey: string,
+    linkedAt: number
+}
+
+enum AuthResult {
+    Success(User),
+    InvalidToken,
+    ExpiredToken,
+    UserNotFound
+}
+
+enum ScriptResult {
+    Ok(Script),
+    NotFound,
+    Unauthorized,
+    DecryptionFailed
+}
+
+// ============================================
+// Cryptography Module
+// ============================================
+
+struct CryptoEngine {
+    fn encrypt(plainText: string, key: string) -> string {
+        let result = ""
+        for i in 0..plainText.length() {
+            let charCode = plainText.charCodeAt(i) ^ key.charCodeAt(i % key.length())
+            result = result + string.fromCharCode(charCode)
+        }
+        return modules.crypto.base64Encode(result)
+    }
+
+    fn decrypt(cipherText: string, key: string) -> string | nil {
+        let decoded = modules.crypto.base64Decode(cipherText)
+        guard decoded != nil else {
+            return nil
+        }
+        let result = ""
+        for i in 0..decoded.length() {
+            let charCode = decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length())
+            result = result + string.fromCharCode(charCode)
+        }
+        return result
+    }
+
+    fn hashPassword(password: string) -> string {
+        let salt = modules.crypto.randomBytes(16)
+        return modules.crypto.sha256(password + salt) + ":" + salt
+    }
+
+    fn verifyPassword(password: string, hash: string) -> bool {
+        let parts = hash.split(":")
+        guard parts.length() == 2 else {
+            return false
+        }
+        let storedHash = parts[0]
+        let salt = parts[1]
+        return modules.crypto.sha256(password + salt) == storedHash
+    }
+
+    fn generateToken() -> string {
+        return modules.crypto.randomUUID()
+    }
+}
+
+// ============================================
+// OAuth Handlers
+// ============================================
+
+struct OAuthHandler {
+    fn exchangeRobloxToken(code: string) -> Result<map, Error> {
+        let response = modules.http.post(
+            "https://apis.roblox.com/oauth/v1/token",
+            {
+                grant_type: "authorization_code",
+                code: code,
+                client_id: ROBLOX_CLIENT_ID,
+                client_secret: "RBX-cE3K03ijx0OmTf3zok1KFZNrrSDUkjhebgC36p_ifgh2lF-Jbe6XFMGcYpi6yW06",
+                redirect_uri: REDIRECT_URI
+            }
+        )
+
+        match response {
+            Ok(data) => {
+                return Result.Ok(data)
+            },
+            Err(e) => {
+                return Result.Err(Error.new("Roblox token exchange failed: " + e.message))
+            }
+        }
+    }
+
+    fn exchangeGoogleToken(code: string) -> Result<map, Error> {
+        let response = modules.http.post(
+            "https://oauth2.googleapis.com/token",
+            {
+                grant_type: "authorization_code",
+                code: code,
+                client_id: GOOGLE_CLIENT_ID,
+                redirect_uri: REDIRECT_URI
+            }
+        )
+
+        match response {
+            Ok(data) => {
+                return Result.Ok(data)
+            },
+            Err(e) => {
+                return Result.Err(Error.new("Google token exchange failed: " + e.message))
+            }
+        }
+    }
+
+    fn fetchRobloxUser(accessToken: string) -> Result<map, Error> {
+        let response = modules.http.get(
+            "https://apis.roblox.com/oauth/v1/userinfo",
+            { Authorization: "Bearer " + accessToken }
+        )
+
+        match response {
+            Ok(data) => {
+                return Result.Ok(data)
+            },
+            Err(e) => {
+                return Result.Err(Error.new("Failed to fetch Roblox user: " + e.message))
+            }
+        }
+    }
+
+    fn fetchGoogleUser(accessToken: string) -> Result<map, Error> {
+        let response = modules.http.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            { Authorization: "Bearer " + accessToken }
+        )
+
+        match response {
+            Ok(data) => {
+                return Result.Ok(data)
+            },
+            Err(e) => {
+                return Result.Err(Error.new("Failed to fetch Google user: " + e.message))
+            }
+        }
+    }
+}
+
+// ============================================
+// Database Operations
+// ============================================
+
+struct Database {
+    fn init() {
+        // Create users table
+        db.execute(`
+            CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY,
+                email TEXT UNIQUE,
+                name TEXT,
+                avatar TEXT,
+                provider TEXT,
+                roblox_id TEXT,
+                google_id TEXT,
+                created_at INTEGER,
+                last_login INTEGER
+            )
+        `)
+
+        // Create scripts table
+        db.execute(`
+            CREATE TABLE IF NOT EXISTS scripts (
+                id TEXT PRIMARY KEY,
+                title TEXT,
+                description TEXT,
+                category TEXT,
+                format TEXT,
+                encrypted_payload TEXT,
+                owner_id TEXT,
+                executions INTEGER DEFAULT 0,
+                premium INTEGER DEFAULT 0,
+                created_at INTEGER
+            )
+        `)
+
+        // Create execution logs table
+        db.execute(`
+            CREATE TABLE IF NOT EXISTS execution_logs (
+                id TEXT PRIMARY KEY,
+                script_id TEXT,
+                user_id TEXT,
+                executor_signature TEXT,
+                success INTEGER,
+                timestamp INTEGER,
+                ip_address TEXT
+            )
+        `)
+
+        // Create linked accounts table
+        db.execute(`
+            CREATE TABLE IF NOT EXISTS linked_accounts (
+                user_id TEXT,
+                provider TEXT,
+                api_key TEXT,
+                linked_at INTEGER,
+                PRIMARY KEY (user_id, provider)
+            )
+        `)
+    }
+
+    fn createUser(user: User) -> Result<bool, Error> {
+        let stmt = db.prepare(`
+            INSERT OR REPLACE INTO users 
+            (id, email, name, avatar, provider, roblox_id, google_id, created_at, last_login)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `)
+
+        stmt.run(
+            user.id,
+            user.email,
+            user.name,
+            user.avatar,
+            user.provider,
+            user.robloxId,
+            user.googleId,
+            user.createdAt,
+            user.lastLogin
+        )
+
+        return Result.Ok(true)
+    }
+
+    fn getUserById(id: string) -> Result<User, Error> {
+        let row = db.queryOne("SELECT * FROM users WHERE id = ?", id)
+
+        guard row != nil else {
+            return Result.Err(Error.new("User not found"))
+        }
+
+        let user = User {
+            id: row.id,
+            email: row.email,
+            name: row.name,
+            avatar: row.avatar,
+            provider: row.provider,
+            robloxId: row.roblox_id,
+            googleId: row.google_id,
+            createdAt: row.created_at,
+            lastLogin: row.last_login
+        }
+
+        return Result.Ok(user)
+    }
+
+    fn createScript(script: Script) -> Result<bool, Error> {
+        let stmt = db.prepare(`
+            INSERT INTO scripts 
+            (id, title, description, category, format, encrypted_payload, owner_id, executions, premium, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `)
+
+        stmt.run(
+            script.id,
+            script.title,
+            script.description,
+            script.category,
+            script.format,
+            script.encryptedPayload,
+            script.ownerId,
+            script.executions,
+            script.premium ? 1 : 0,
+            script.createdAt
+        )
+
+        return Result.Ok(true)
+    }
+
+    fn getScriptById(id: string) -> Result<Script, Error> {
+        let row = db.queryOne("SELECT * FROM scripts WHERE id = ?", id)
+
+        guard row != nil else {
+            return Result.Err(Error.new("Script not found"))
+        }
+
+        let script = Script {
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            category: row.category,
+            format: row.format,
+            encryptedPayload: row.encrypted_payload,
+            ownerId: row.owner_id,
+            executions: row.executions,
+            premium: row.premium == 1,
+            createdAt: row.created_at
+        }
+
+        return Result.Ok(script)
+    }
+
+    fn incrementExecutionCount(scriptId: string) {
+        db.execute("UPDATE scripts SET executions = executions + 1 WHERE id = ?", scriptId)
+    }
+
+    fn logExecution(log: ExecutionLog) {
+        let stmt = db.prepare(`
+            INSERT INTO execution_logs 
+            (id, script_id, user_id, executor_signature, success, timestamp, ip_address)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `)
+
+        stmt.run(
+            log.id,
+            log.scriptId,
+            log.userId,
+            log.executorSignature,
+            log.success ? 1 : 0,
+            log.timestamp,
+            log.ipAddress
+        )
+    }
+
+    fn getTotalExecutions() -> number {
+        let row = db.queryOne("SELECT SUM(executions) as total FROM scripts")
+        return row != nil ? row.total : 0
+    }
+
+    fn getUserExecutions(userId: string) -> number {
+        let row = db.queryOne(
+            "SELECT COUNT(*) as count FROM execution_logs WHERE user_id = ?",
+            userId
+        )
+        return row != nil ? row.count : 0
+    }
+
+    fn linkAccount(account: LinkedAccount) -> Result<bool, Error> {
+        let stmt = db.prepare(`
+            INSERT OR REPLACE INTO linked_accounts 
+            (user_id, provider, api_key, linked_at)
+            VALUES (?, ?, ?, ?)
+        `)
+
+        stmt.run(account.userId, account.provider, account.apiKey, account.linkedAt)
+        return Result.Ok(true)
+    }
+
+    fn getLinkedAccounts(userId: string) -> array<LinkedAccount> {
+        let rows = db.query("SELECT * FROM linked_accounts WHERE user_id = ?", userId)
+        let accounts: array<LinkedAccount> = []
+
+        for row in rows {
+            accounts.push(LinkedAccount {
+                userId: row.user_id,
+                provider: row.provider,
+                apiKey: row.api_key,
+                linkedAt: row.linked_at
+            })
+        }
+
+        return accounts
+    }
+}
+
+// ============================================
+// Script Execution Engine
+// ============================================
+
+struct ExecutionEngine {
+    let crypto: CryptoEngine
+    let db: Database
+
+    fn execute(scriptId: string, userId: string, executorSignature: string, ipAddress: string) -> Result<string, Error> {
+        // Verify executor signature
+        guard crypto.verifyExecutor(executorSignature) else {
+            return Result.Err(Error.new("BROWSER_ACCESS_REJECTED: Invalid executor signature"))
+        }
+
+        // Get script from database
+        let scriptResult = db.getScriptById(scriptId)
+
+        match scriptResult {
+            Ok(script) => {
+                // Decrypt payload
+                let decrypted = crypto.decrypt(script.encryptedPayload, "zurai02-secure-key-v2")
+
+                guard decrypted != nil else {
+                    return Result.Err(Error.new("DECRYPTION_FAILED: Could not decrypt script"))
+                }
+
+                // Log execution
+                let log = ExecutionLog {
+                    id: crypto.generateToken(),
+                    scriptId: scriptId,
+                    userId: userId,
+                    executorSignature: executorSignature,
+                    success: true,
+                    timestamp: modules.process.time(),
+                    ipAddress: ipAddress
+                }
+                db.logExecution(log)
+                db.incrementExecutionCount(scriptId)
+
+                return Result.Ok(decrypted)
+            },
+            Err(e) => {
+                return Result.Err(e)
+            }
+        }
+    }
+
+    fn validateScript(encryptedPayload: string) -> Result<bool, Error> {
+        let decrypted = crypto.decrypt(encryptedPayload, "zurai02-secure-key-v2")
+
+        guard decrypted != nil else {
+            return Result.Err(Error.new("Invalid script format or corrupted payload"))
+        }
+
+        // Validate Luazi syntax
+        let validation = modules.compiler.validate(decrypted)
+
+        match validation {
+            Ok(_) => {
+                return Result.Ok(true)
+            },
+            Err(e) => {
+                return Result.Err(Error.new("Syntax error: " + e.message))
+            }
+        }
+    }
+}
+
+// ============================================
+// HTTP Server Routes
+// ============================================
+
+struct HttpServer {
+    let crypto: CryptoEngine
+    let oauth: OAuthHandler
+    let db: Database
+    let engine: ExecutionEngine
+
+    fn start() {
+        let server = modules.http.createServer()
+
+        // CORS middleware
+        server.use(fn(req, res, next) {
+            res.setHeader("Access-Control-Allow-Origin", "https://zurai02.is-a.dev")
+            res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+            next()
+        })
+
+        // Health check
+        server.get("/api/health", fn(req, res) {
+            res.json({
+                status: "ok",
+                version: "2.0.0",
+                timestamp: modules.process.time()
+            })
+        })
+
+        // Get execution stats
+        server.get("/api/stats", fn(req, res) {
+            let totalExecs = db.getTotalExecutions()
+            let totalScripts = db.queryOne("SELECT COUNT(*) as count FROM scripts").count
+            let activeUsers = db.queryOne("SELECT COUNT(*) as count FROM users").count
+
+            res.json({
+                totalExecutions: totalExecs,
+                totalScripts: totalScripts,
+                activeUsers: activeUsers,
+                timestamp: modules.process.time()
+            })
+        })
+
+        // Roblox OAuth callback
+        server.post("/api/auth/roblox", fn(req, res) {
+            let code = req.body.code
+            let state = req.body.state
+
+            guard code != nil else {
+                res.status(400).json({ error: "Missing authorization code" })
+                return
+            }
+
+            let tokenResult = oauth.exchangeRobloxToken(code)
+
+            match tokenResult {
+                Ok(tokenData) => {
+                    let userResult = oauth.fetchRobloxUser(tokenData.access_token)
+
+                    match userResult {
+                        Ok(userData) => {
+                            let user = User {
+                                id: "roblox_" + userData.sub,
+                                email: userData.email | nil,
+                                name: userData.name | userData.preferred_username,
+                                avatar: userData.picture | "",
+                                provider: "Roblox",
+                                robloxId: userData.sub,
+                                googleId: nil,
+                                createdAt: modules.process.time(),
+                                lastLogin: modules.process.time()
+                            }
+
+                            db.createUser(user)
+
+                            res.json({
+                                success: true,
+                                user: user,
+                                accessToken: tokenData.access_token,
+                                expiresIn: tokenData.expires_in
+                            })
+                        },
+                        Err(e) => {
+                            res.status(500).json({ error: e.message })
+                        }
+                    }
+                },
+                Err(e) => {
+                    res.status(500).json({ error: e.message })
+                }
+            }
+        })
+
+        // Google OAuth callback
+        server.post("/api/auth/google", fn(req, res) {
+            let code = req.body.code
+
+            guard code != nil else {
+                res.status(400).json({ error: "Missing authorization code" })
+                return
+            }
+
+            let tokenResult = oauth.exchangeGoogleToken(code)
+
+            match tokenResult {
+                Ok(tokenData) => {
+                    let userResult = oauth.fetchGoogleUser(tokenData.access_token)
+
+                    match userResult {
+                        Ok(userData) => {
+                            let user = User {
+                                id: "google_" + userData.id,
+                                email: userData.email,
+                                name: userData.name,
+                                avatar: userData.picture | "",
+                                provider: "Google",
+                                robloxId: nil,
+                                googleId: userData.id,
+                                createdAt: modules.process.time(),
+                                lastLogin: modules.process.time()
+                            }
+
+                            db.createUser(user)
+
+                            res.json({
+                                success: true,
+                                user: user,
+                                accessToken: tokenData.access_token,
+                                expiresIn: tokenData.expires_in
+                            })
+                        },
+                        Err(e) => {
+                            res.status(500).json({ error: e.message })
+                        }
+                    }
+                },
+                Err(e) => {
+                    res.status(500).json({ error: e.message })
+                }
+            }
+        })
+
+        // Execute script
+        server.post("/api/execute", fn(req, res) {
+            let scriptId = req.body.scriptId
+            let userId = req.body.userId
+            let signature = req.headers["X-Executor-Signature"]
+            let ipAddress = req.ip
+
+            guard signature != nil else {
+                res.status(403).json({
+                    error: "BROWSER_ACCESS_REJECTED",
+                    message: "This endpoint requires a verified executor signature"
+                })
+                return
+            }
+
+            let result = engine.execute(scriptId, userId, signature, ipAddress)
+
+            match result {
+                Ok(payload) => {
+                    res.json({
+                        success: true,
+                        payload: payload,
+                        executionId: crypto.generateToken()
+                    })
+                },
+                Err(e) => {
+                    res.status(403).json({
+                        error: "EXECUTION_FAILED",
+                        message: e.message
+                    })
+                }
+            }
+        })
+
+        // Validate script
+        server.post("/api/validate", fn(req, res) {
+            let encryptedPayload = req.body.payload
+
+            guard encryptedPayload != nil else {
+                res.status(400).json({ error: "Missing script payload" })
+                return
+            }
+
+            let result = engine.validateScript(encryptedPayload)
+
+            match result {
+                Ok(_) => {
+                    res.json({ valid: true, message: "Script is valid and ready for execution" })
+                },
+                Err(e) => {
+                    res.status(400).json({ valid: false, error: e.message })
+                }
+            }
+        })
+
+        // Get user profile
+        server.get("/api/user/:id", fn(req, res) {
+            let userId = req.params.id
+            let userResult = db.getUserById(userId)
+
+            match userResult {
+                Ok(user) => {
+                    let executions = db.getUserExecutions(userId)
+                    let linked = db.getLinkedAccounts(userId)
+
+                    res.json({
+                        user: user,
+                        executions: executions,
+                        linkedAccounts: linked
+                    })
+                },
+                Err(e) => {
+                    res.status(404).json({ error: e.message })
+                }
+            }
+        })
+
+        // Link third-party account
+        server.post("/api/link", fn(req, res) {
+            let userId = req.body.userId
+            let provider = req.body.provider
+            let apiKey = req.body.apiKey
+
+            let account = LinkedAccount {
+                userId: userId,
+                provider: provider,
+                apiKey: crypto.encrypt(apiKey, "link-key-v1"),
+                linkedAt: modules.process.time()
+            }
+
+            let result = db.linkAccount(account)
+
+            match result {
+                Ok(_) => {
+                    res.json({ success: true, message: provider + " account linked successfully" })
+                },
+                Err(e) => {
+                    res.status(500).json({ error: e.message })
+                }
+            }
+        })
+
+        // Get scripts list
+        server.get("/api/scripts", fn(req, res) {
+            let category = req.query.category | "all"
+            let rows: array<map>
+
+            if category == "all" {
+                rows = db.query("SELECT * FROM scripts ORDER BY executions DESC")
+            } else {
+                rows = db.query("SELECT * FROM scripts WHERE category = ? ORDER BY executions DESC", category)
+            }
+
+            let scripts: array<map> = []
+            for row in rows {
+                scripts.push({
+                    id: row.id,
+                    title: row.title,
+                    description: row.description,
+                    category: row.category,
+                    format: row.format,
+                    executions: row.executions,
+                    premium: row.premium == 1,
+                    createdAt: row.created_at
+                })
+            }
+
+            res.json({ scripts: scripts, count: scripts.length() })
+        })
+
+        // Start server
+        server.listen(PORT, HOST, fn() {
+            print("zurai02 Backend Server running on http://" + HOST + ":" + PORT)
+            print("Domain: https://zurai02.is-a.dev")
+            print("Roblox Client ID: " + ROBLOX_CLIENT_ID)
+            print("Google Client ID: " + GOOGLE_CLIENT_ID)
+        })
+    }
+}
+
+// ============================================
+// Main Entry Point
+// ============================================
+
+fn main() {
+    print("========================================")
+    print("  zurai02 Development Backend Server")
+    print("  Written in Luazi v2.0")
+    print("========================================")
+
+    let crypto = CryptoEngine {}
+    let oauth = OAuthHandler {}
+    let db = Database {}
+    let engine = ExecutionEngine { crypto: crypto, db: db }
+    let server = HttpServer { crypto: crypto, oauth: oauth, db: db, engine: engine }
+
+    // Initialize database
+    db.init()
+
+    // Seed demo data
+    seedDemoData(db, crypto)
+
+    // Start HTTP server
+    server.start()
+}
+
+fn seedDemoData(db: Database, crypto: CryptoEngine) {
+    let scripts: array<Script> = [
+        Script {
+            id: "script_001",
+            title: "Auto Farm V2",
+            description: "Advanced auto-farming script with anti-detection",
+            category: "game",
+            format: ".lz",
+            encryptedPayload: crypto.encrypt("-- Auto Farm Logic", "zurai02-secure-key-v2"),
+            ownerId: "system",
+            executions: 15420,
+            premium: true,
+            createdAt: modules.process.time()
+        },
+        Script {
+            id: "script_002",
+            title: "ESP & Wallhack",
+            description: "See players through walls with customizable ESP",
+            category: "utility",
+            format: ".lua",
+            encryptedPayload: crypto.encrypt("-- ESP Logic", "zurai02-secure-key-v2"),
+            ownerId: "system",
+            executions: 8932,
+            premium: false,
+            createdAt: modules.process.time()
+        },
+        Script {
+            id: "script_003",
+            title: "Admin Commands",
+            description: "Full admin command suite",
+            category: "admin",
+            format: ".lz",
+            encryptedPayload: crypto.encrypt("-- Admin Logic", "zurai02-secure-key-v2"),
+            ownerId: "system",
+            executions: 6781,
+            premium: true,
+            createdAt: modules.process.time()
+        }
+    ]
+
+    for script in scripts {
+        db.createScript(script)
+    }
+
+    print("Seeded " + scripts.length() + " demo scripts")
+}
+
+main()
