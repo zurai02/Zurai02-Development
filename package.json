@@ -1,0 +1,69 @@
+{
+  "name": "zurai02-platform",
+  "version": "2.0.0",
+  "description": "Secure Roblox Script Execution Platform by zurai02 Development",
+  "main": "backend/server.lz",
+  "scripts": {
+    "build": "luazi build backend/server.lz -t bytecode -o dist/server.lzc",
+    "build:wasm": "luazi build backend/server.lz -t wat -o dist/server.wat",
+    "build:cpp": "luazi build backend/server.lz -t cpp -o dist/server.cpp",
+    "build:csharp": "luazi build backend/server.lz -t csharp -o dist/server.cs",
+    "start": "luazi run backend/server.lz",
+    "start:compiled": "luazi run dist/server.lzc",
+    "dev": "luazi run backend/server.lz --watch",
+    "test": "luazi test",
+    "lint": "luazi lint",
+    "compile:scripts": "luazi build scripts/*.lz -t bytecode -o dist/scripts/",
+    "dump:ast": "luazi dump-ast backend/server.lz",
+    "dump:bytecode": "luazi dump-bytecode backend/server.lz"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zurai02/zurai02-platform.git"
+  },
+  "keywords": [
+    "roblox",
+    "script-executor",
+    "luazi",
+    "oauth2",
+    "zurai02",
+    "script-protection",
+    "encryption"
+  ],
+  "author": "zurai02 Development",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zurai02/zurai02-platform/issues"
+  },
+  "homepage": "https://zurai02.is-a.dev",
+  "dependencies": {
+    "luazi": "^2.0.0",
+    "luazi-stdlib": "^2.0.0",
+    "luazi-http": "^1.5.0",
+    "luazi-crypto": "^1.3.0",
+    "luazi-sqlite": "^1.2.0"
+  },
+  "devDependencies": {
+    "luazi-test": "^1.0.0",
+    "luazi-linter": "^1.1.0"
+  },
+  "engines": {
+    "luazi": ">=2.0.0",
+    "node": ">=18.0.0"
+  },
+  "luazi": {
+    "target": "bytecode",
+    "optimization": 2,
+    "stdlib": [
+      "fs",
+      "path",
+      "crypto",
+      "process",
+      "http"
+    ],
+    "entryPoint": "backend/server.lz",
+    "outputDir": "dist",
+    "sourceMap": true,
+    "typeCheck": true
+  }
+}
