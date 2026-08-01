@@ -1,0 +1,74 @@
+// ============================================
+// config.lz - Platform Configuration
+// ============================================
+
+import { modules } from "luazi:stdlib"
+
+struct PlatformConfig {
+    // Server settings
+    let port: number = 8080
+    let host: string = "0.0.0.0"
+    let env: string = "production"
+
+    // OAuth settings
+    let robloxClientId: string = "3255755288279625071"
+    let googleClientId: string = "870510440840-1akk1vvbiqik864jip7pc4al3hmnki1s.apps.googleusercontent.com"
+    let redirectUri: string = "https://zurai02.is-a.dev/redirect.html"
+
+    // Security settings
+    let encryptionKey: string = modules.process.env.ENCRYPTION_KEY | "zurai02-default-key"
+    let tokenExpiry: number = 3600  // 1 hour
+    let refreshTokenExpiry: number = 2592000  // 30 days
+
+    // Rate limiting
+    let rateLimitRequests: number = 100
+    let rateLimitWindow: number = 900  // 15 minutes
+
+    // Database
+    let dbPath: string = "./data/zurai02.db"
+    let dbPoolSize: number = 10
+
+    // Features
+    let enableLinkvertise: bool = true
+    let enableLootLabs: bool = true
+    let enablePremium: bool = true
+    let maxScriptSize: number = 1048576  // 1MB
+    let maxExecutionTime: number = 30000  // 30 seconds
+
+    fn loadFromEnv() -> PlatformConfig {
+        let config = PlatformConfig {}
+
+        if modules.process.env.PORT != nil {
+            config.port = number.parse(modules.process.env.PORT)
+        }
+
+        if modules.process.env.NODE_ENV == "development" {
+            config.env = "development"
+            config.encryptionKey = "dev-key-not-for-production"
+        }
+
+        if modules.process.env.ENCRYPTION_KEY != nil {
+            config.encryptionKey = modules.process.env.ENCRYPTION_KEY
+        }
+
+        return config
+    }
+
+    fn validate() -> Result<bool, Error> {
+        guard encryptionKey.length() >= 32 else {
+            return Result.Err(Error.new("Encryption key must be at least 32 characters"))
+        }
+
+        guard robloxClientId.length() > 0 else {
+            return Result.Err(Error.new("Roblox Client ID is required"))
+        }
+
+        guard googleClientId.length() > 0 else {
+            return Result.Err(Error.new("Google Client ID is required"))
+        }
+
+        return Result.Ok(true)
+    }
+}
+
+export { PlatformConfig }
