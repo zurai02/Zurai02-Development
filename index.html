@@ -3,272 +3,1150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>zurai02 | Roblox Script Hub</title>
-    <link rel="stylesheet" href="https://zurai02.is-a.dev/Zurai02-Development/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <title>Roblox Auth App</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   Roblox Auth App — Global Styles
+   ============================================ */
+
+:root {
+    --bg-primary: #0a0a0f;
+    --bg-secondary: #111118;
+    --bg-tertiary: #1a1a24;
+    --bg-card: #13131c;
+    --bg-hover: #1e1e2a;
+
+    --text-primary: #f0f0f5;
+    --text-secondary: #a0a0b0;
+    --text-muted: #6b6b7b;
+    --text-accent: #e0e0f0;
+
+    --accent-primary: #6366f1;
+    --accent-secondary: #8b5cf6;
+    --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    --accent-glow: rgba(99, 102, 241, 0.3);
+
+    --border-color: #1f1f2e;
+    --border-hover: #2a2a3e;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+    --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
+
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+a:hover {
+    color: var(--accent-secondary);
+}
+
+/* ============================================
+   NAVIGATION
+   ============================================ */
+
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 64px;
+    background: rgba(10, 10, 15, 0.8);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.nav-brand a {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.nav-brand a:hover {
+    color: var(--text-primary);
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-gradient);
+    border-radius: var(--radius-sm);
+    color: white;
+}
+
+.logo-icon svg {
+    stroke: white;
+}
+
+.nav-links {
+    display: flex;
+    gap: 4px;
+}
+
+.nav-link {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.nav-link:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+.nav-link.active {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+.mobile-menu-btn {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.mobile-menu-btn span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transition: var(--transition);
+}
+
+.mobile-nav {
+    display: none;
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 999;
+    transform: translateY(-100%);
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.mobile-nav.open {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.mobile-link {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.mobile-link:hover,
+.mobile-link.active {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+/* ============================================
+   HERO SECTION (Home Page)
+   ============================================ */
+
+.hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 120px 64px 80px;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 64px;
+}
+
+.hero-content {
+    flex: 1;
+    max-width: 560px;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+.badge-dot {
+    width: 6px;
+    height: 6px;
+    background: #22c55e;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+}
+
+.gradient-text {
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtitle {
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 32px;
+    max-width: 480px;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--accent-gradient);
+    color: white;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
+    color: white;
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+}
+
+/* Hero Visual */
+.hero-visual {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.card-stack {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+
+.feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-bottom: 16px;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-glow);
+}
+
+.feature-card:hover::before {
+    opacity: 1;
+}
+
+.card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.card-icon.shield { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+.card-icon.bolt { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.card-icon.lock { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+
+.feature-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.feature-card p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* ============================================
+   LEGAL SECTION (Home Page)
+   ============================================ */
+
+.legal-section {
+    padding: 80px 64px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.legal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.legal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.legal-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-glow);
+    color: inherit;
+}
+
+.legal-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-md);
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-primary);
+    margin-bottom: 20px;
+}
+
+.legal-card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.legal-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.legal-arrow {
+    position: absolute;
+    top: 32px;
+    right: 32px;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+.legal-card:hover .legal-arrow {
+    color: var(--accent-primary);
+    transform: translateX(4px);
+}
+
+/* ============================================
+   LEGAL PAGES (TOS & Privacy)
+   ============================================ */
+
+.legal-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 120px 32px 80px;
+}
+
+.legal-header {
+    text-align: center;
+    margin-bottom: 48px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.legal-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent-primary);
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 20px;
+}
+
+.legal-badge.privacy {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.legal-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+}
+
+.legal-date {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Table of Contents */
+.legal-toc {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    margin-bottom: 48px;
+    position: sticky;
+    top: 80px;
+}
+
+.legal-toc h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-accent);
+}
+
+.legal-toc ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.legal-toc li a {
+    display: block;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.legal-toc li a:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+/* Legal Content */
+.legal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.legal-content section {
+    scroll-margin-top: 100px;
+}
+
+.legal-content h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text-accent);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.legal-content h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    color: var(--text-primary);
+}
+
+.legal-content p {
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+    line-height: 1.8;
+}
+
+.legal-content ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 16px;
+}
+
+.legal-content ul li {
+    position: relative;
+    padding-left: 24px;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.legal-content ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 6px;
+    height: 6px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+}
+
+.legal-content strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.contact-box {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    margin-top: 16px;
+}
+
+.contact-box p {
+    margin-bottom: 8px;
+}
+
+.contact-box p:last-child {
+    margin-bottom: 0;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.footer {
+    border-top: 1px solid var(--border-color);
+    padding: 40px 32px;
+    margin-top: auto;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.footer-links {
+    display: flex;
+    gap: 24px;
+}
+
+.footer-links a {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.footer-links a:hover {
+    color: var(--text-secondary);
+}
+
+.footer-copy {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* ============================================
+   TOAST NOTIFICATION
+   ============================================ */
+
+.toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transition: var(--transition);
+    z-index: 2000;
+    pointer-events: none;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 1024px) {
+    .hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 120px 32px 60px;
+    }
+
+    .hero-content {
+        max-width: 100%;
+    }
+
+    .hero-subtitle {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+
+    .hero-visual {
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .legal-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    .mobile-nav {
+        display: flex;
+    }
+
+    .hero {
+        padding: 100px 20px 40px;
+    }
+
+    .hero-title {
+        font-size: 2.2rem;
+    }
+
+    .legal-section {
+        padding: 40px 20px;
+    }
+
+    .legal-page {
+        padding: 100px 20px 60px;
+    }
+
+    .legal-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .legal-toc {
+        position: static;
+    }
+
+    .legal-toc ul {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar {
+        padding: 0 16px;
+    }
+
+    .hero-title {
+        font-size: 1.8rem;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .legal-card {
+        padding: 24px;
+    }
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--border-hover);
+}
+
+/* ============================================
+   SELECTION STYLING
+   ============================================ */
+
+::selection {
+    background: rgba(99, 102, 241, 0.3);
+    color: var(--text-primary);
+}
+
+</style>
 <base target="_blank">
 </head>
 <body>
-    <div class="bg-mesh"></div>
-    <div class="bg-glow top"></div>
-    <div class="bg-glow bottom"></div>
-
-    <!-- Navbar -->
     <nav class="navbar">
-        <a href="https://zurai02.is-a.dev/Zurai02-Development/" class="nav-brand">
-            <div class="logo">
-                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16 2L28 9v14L16 30 4 23V9l12-7z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-                    <path d="M16 2v28M4 9l12 7 12-7M4 23l12-7 12 7" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
-                    <circle cx="16" cy="16" r="3.5" fill="currentColor"/>
+        <div class="nav-brand">
+            <div class="logo-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
                 </svg>
             </div>
-            <span class="brand-text">zurai<span class="accent">02</span></span>
-        </a>
+            <span class="brand-text">RobloxAuth</span>
+        </div>
         <div class="nav-links">
-            <a href="#scripts">Scripts</a>
-            <a href="#executor">Executor</a>
-            <a href="#dashboard">Dashboard</a>
+            <a href="index.html" class="nav-link active">Home</a>
+            <a href="tos.html" class="nav-link">Terms of Service</a>
+            <a href="privacy-policy.html" class="nav-link">Privacy Policy</a>
         </div>
-        <div class="nav-right">
-            <div class="exec-badge">
-                <span class="dot"></span>
-                <span id="exec-count">0</span> execs
-            </div>
-            <button class="btn btn-primary" id="auth-btn" onclick="openAuth()">Sign In</button>
-        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </nav>
 
-    <!-- Hero -->
-    <section class="hero">
-        <div class="hero-left">
+    <div class="mobile-nav" id="mobileNav">
+        <a href="index.html" class="mobile-link active">Home</a>
+        <a href="tos.html" class="mobile-link">Terms of Service</a>
+        <a href="privacy-policy.html" class="mobile-link">Privacy Policy</a>
+    </div>
+
+    <main class="hero">
+        <div class="hero-content">
             <div class="badge">
                 <span class="badge-dot"></span>
-                Roblox Script Execution Platform
+                Secure Roblox Authentication
             </div>
-            <h1>Execute Scripts<br><span class="gradient">Securely</span></h1>
-            <p class="hero-desc">Scripts are encrypted and only run through verified executors. Browser access is automatically rejected. Supports .lz, .lua, and .txt formats.</p>
-            <div class="hero-btns">
-                <a href="#scripts" class="btn btn-glow">Browse Scripts</a>
-                <a href="#executor" class="btn btn-ghost">Launch Executor</a>
+            <h1 class="hero-title">
+                Seamless <span class="gradient-text">Roblox</span><br>Account Integration
+            </h1>
+            <p class="hero-subtitle">
+                A secure, fast, and reliable authentication solution for Roblox developers and players.
+            </p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary" onclick="showComingSoon()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
+                        <polyline points="10 17 15 12 10 7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                    Get Started
+                </button>
+                <a href="tos.html" class="btn btn-secondary">Read Terms</a>
             </div>
-            <div class="hero-stats">
-                <div class="hstat">
-                    <span class="hnum" id="total-scripts">0</span>
-                    <span class="hlabel">Scripts</span>
+        </div>
+        <div class="hero-visual">
+            <div class="card-stack">
+                <div class="feature-card">
+                    <div class="card-icon shield">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <h3>OAuth 2.0</h3>
+                    <p>Industry-standard secure authentication flow</p>
                 </div>
-                <div class="hstat">
-                    <span class="hnum" id="total-executions">0</span>
-                    <span class="hlabel">Executions</span>
+                <div class="feature-card">
+                    <div class="card-icon bolt">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                    </div>
+                    <h3>Instant Verify</h3>
+                    <p>Sub-second account verification speed</p>
                 </div>
-                <div class="hstat">
-                    <span class="hnum" id="active-users">0</span>
-                    <span class="hlabel">Users</span>
+                <div class="feature-card">
+                    <div class="card-icon lock">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0110 0v4"/>
+                        </svg>
+                    </div>
+                    <h3>Data Privacy</h3>
+                    <p>Your data stays yours — always encrypted</p>
                 </div>
             </div>
         </div>
-        <div class="hero-right">
-            <div class="code-window">
-                <div class="code-header">
-                    <div class="dots"><span></span><span></span><span></span></div>
-                    <span class="code-title">protected_script.lz</span>
-                    <span class="code-tag">ENCRYPTED</span>
+    </main>
+
+    <section class="legal-section">
+        <div class="legal-grid">
+            <a href="tos.html" class="legal-card">
+                <div class="legal-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
                 </div>
-                <div class="code-body">
-                    <div class="c-line"><span class="ln">1</span><span class="k">--</span><span class="c"> zurai02 Secure Script</span></div>
-                    <div class="c-line"><span class="ln">2</span><span class="k">local</span> <span class="v">Nexus</span> <span class="k">=</span> <span class="f">require</span>(<span class="s">"zurai02.core"</span>)</div>
-                    <div class="c-line"><span class="ln">3</span><span class="k">local</span> <span class="v">Auth</span> <span class="k">=</span> <span class="v">Nexus</span>.<span class="f">authenticate</span>()</div>
-                    <div class="c-line"><span class="ln">4</span></div>
-                    <div class="c-line"><span class="ln">5</span><span class="k">if</span> <span class="k">not</span> <span class="v">Auth</span>.<span class="v">verified</span> <span class="k">then</span></div>
-                    <div class="c-line"><span class="ln">6</span>  <span class="k">return</span> <span class="v">Nexus</span>.<span class="f">reject</span>(<span class="s">"Unauthorized"</span>)</div>
-                    <div class="c-line"><span class="ln">7</span><span class="k">end</span></div>
-                    <div class="c-line"><span class="ln">8</span></div>
-                    <div class="c-line"><span class="ln">9</span><span class="c">-- Script payload encrypted</span></div>
-                    <div class="c-line"><span class="ln">10</span><span class="v">Nexus</span>.<span class="f">execute</span>(<span class="v">Auth</span>.<span class="v">payload</span>)</div>
+                <h3>Terms of Service</h3>
+                <p>Read the rules and guidelines for using our authentication services.</p>
+                <span class="legal-arrow">→</span>
+            </a>
+            <a href="privacy-policy.html" class="legal-card">
+                <div class="legal-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
                 </div>
-            </div>
+                <h3>Privacy Policy</h3>
+                <p>Learn how we collect, use, and protect your personal information.</p>
+                <span class="legal-arrow">→</span>
+            </a>
         </div>
     </section>
 
-    <!-- Scripts -->
-    <section id="scripts" class="scripts">
-        <div class="section-head">
-            <h2>Script Library</h2>
-            <p>Verified scripts ready for execution</p>
-        </div>
-        <div class="filters">
-            <button class="filter active" data-filter="all">All</button>
-            <button class="filter" data-filter="game">Game</button>
-            <button class="filter" data-filter="utility">Utility</button>
-            <button class="filter" data-filter="admin">Admin</button>
-            <button class="filter" data-filter="premium">Premium</button>
-        </div>
-        <div class="script-grid" id="script-grid"></div>
-    </section>
-
-    <!-- Executor -->
-    <section id="executor" class="executor">
-        <div class="section-head">
-            <h2>Script Executor</h2>
-            <p>Paste or upload your script to execute</p>
-        </div>
-        <div class="exec-box">
-            <div class="exec-input-panel">
-                <div class="exec-toolbar">
-                    <div class="t-left">
-                        <button class="tbtn" onclick="document.getElementById('file-up').click()" title="Upload">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0L5 7m3 3 3-3M3 14h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </button>
-                        <input type="file" id="file-up" accept=".lz,.lua,.txt" hidden onchange="handleFile(event)">
-                        <button class="tbtn" onclick="clearInput()" title="Clear">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M5 4v9a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V4M7 4V3a1 1 0 0 1 1-1h0a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                        </button>
-                    </div>
-                    <div class="t-right">
-                        <span class="status" id="exec-status"><span class="s-dot ready"></span>Ready</span>
-                    </div>
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="logo-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
                 </div>
-                <textarea id="script-input" placeholder="-- Paste your Roblox script here...
--- Only verified executors can decrypt and run scripts
--- Browser access is automatically rejected
--- Supported: .lz, .lua, .txt"></textarea>
-                <div class="exec-actions">
-                    <button class="btn btn-glow" onclick="runScript()">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2l10 6-10 6V2z" fill="currentColor"/></svg>
-                        Execute
-                    </button>
-                    <button class="btn btn-secondary" onclick="validateScript()">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l2 5h5l-4 3 1.5 5L8 10l-4.5 4L5 9 1 6h5l2-5z" fill="currentColor"/></svg>
-                        Validate
-                    </button>
-                </div>
+                <span>RobloxAuth</span>
             </div>
-            <div class="exec-output-panel">
-                <div class="out-header">
-                    <span>Console Output</span>
-                    <button onclick="clearOutput()">Clear</button>
-                </div>
-                <div class="out-body" id="out-body">
-                    <div class="out-line sys"><span class="time">[00:00:00]</span> zurai02 Executor v2.0 initialized</div>
-                    <div class="out-line sys"><span class="time">[00:00:00]</span> Waiting for script input...</div>
-                </div>
+            <div class="footer-links">
+                <a href="tos.html">Terms of Service</a>
+                <a href="privacy-policy.html">Privacy Policy</a>
             </div>
+            <p class="footer-copy">© 2026 RobloxAuth. All rights reserved.</p>
         </div>
-    </section>
-
-    <!-- Dashboard -->
-    <section id="dashboard" class="dashboard">
-        <div class="section-head">
-            <h2>Dashboard</h2>
-            <p>Your account, stats, and linked services</p>
-        </div>
-        <div class="dash-grid">
-            <div class="card profile-card">
-                <div class="card-head">Profile</div>
-                <div class="profile-body">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=guest" id="prof-avatar" alt="avatar">
-                    <div class="profile-info">
-                        <h3 id="prof-name">Guest</h3>
-                        <p id="prof-email">Not signed in</p>
-                        <span class="tag">Free</span>
-                    </div>
-                </div>
-            </div>
-            <div class="card stats-card">
-                <div class="card-head">Stats</div>
-                <div class="stats-body">
-                    <div class="s-item"><span class="s-num" id="user-execs">0</span><span class="s-label">Executions</span></div>
-                    <div class="s-item"><span class="s-num" id="user-scripts">0</span><span class="s-label">Scripts</span></div>
-                    <div class="s-item"><span class="s-num" id="user-uptime">0h</span><span class="s-label">Uptime</span></div>
-                </div>
-            </div>
-            <div class="card links-card">
-                <div class="card-head">Linked Accounts</div>
-                <div class="links-body">
-                    <div class="l-row" id="l-google">
-                        <div class="l-icon g"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 7.5v3h4.1c-.2 1.1-1.2 2-4.1 2-2.5 0-4.5-2-4.5-4.5S6.5 3.5 9 3.5c1.4 0 2.4.6 2.9 1.1l2-1.9C12.4 1.4 10.8 1 9 1 4.5 1 1 4.5 1 9s3.5 8 8 8c4.6 0 7.7-3.2 7.7-7.7 0-.5-.1-1-.2-1.4H9z" fill="currentColor"/></svg></div>
-                        <div class="l-info"><span>Google</span><span id="st-google">Not linked</span></div>
-                        <button class="l-btn" id="btn-g" onclick="linkGoogle()">Link</button>
-                    </div>
-                    <div class="l-row" id="l-roblox">
-                        <div class="l-icon r"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 2h6v6H2V2zm8 0h6v6h-6V2zM2 10h6v6H2v-6zm8 0h6v6h-6v-6z" fill="currentColor"/></svg></div>
-                        <div class="l-info"><span>Roblox</span><span id="st-roblox">Not linked</span></div>
-                        <button class="l-btn" id="btn-r" onclick="linkRoblox()">Link</button>
-                    </div>
-                    <div class="l-row" id="l-linkvertise">
-                        <div class="l-icon lv"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 1C4.6 1 1 4.6 1 9s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm3.8 8.8L9.4 13.2c-.3.3-.9.3-1.2 0L4.8 9.8c-.3-.3-.3-.9 0-1.2.3-.3.9-.3 1.2 0l2.8 2.8 2.8-2.8c.3-.3.9-.3 1.2 0 .3.3.3.9 0 1.2z" fill="currentColor"/></svg></div>
-                        <div class="l-info"><span>Linkvertise</span><span id="st-lv">Not linked</span></div>
-                        <button class="l-btn" id="btn-lv" onclick="linkLV()">Link</button>
-                    </div>
-                    <div class="l-row" id="l-lootlabs">
-                        <div class="l-icon ll"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 1l2.5 5.5L17 7.5l-4 4.5L14.5 17 9 14.5 3.5 17 5 12 1 7.5l5.5-1L9 1z" fill="currentColor"/></svg></div>
-                        <div class="l-info"><span>LootLabs</span><span id="st-ll">Not linked</span></div>
-                        <button class="l-btn" id="btn-ll" onclick="linkLL()">Link</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="foot-brand">
-            <span class="brand-text">zurai<span class="accent">02</span></span>
-            <p>Secure Roblox Script Execution</p>
-        </div>
-        <div class="foot-links">
-            <a href="https://zurai02.is-a.dev/Zurai02-Development/privacy.html">Privacy</a>
-            <a href="https://zurai02.is-a.dev/Zurai02-Development/tos.html">Terms</a>
-            <a href="https://zurai02.is-a.dev/Zurai02-Development/redirect.html">OAuth</a>
-        </div>
-        <p class="foot-copy">&copy; 2026 zurai02 Development</p>
     </footer>
 
-    <!-- Auth Modal -->
-    <div class="modal" id="auth-modal">
-        <div class="modal-box">
-            <button class="modal-close" onclick="closeAuth()">&times;</button>
-            <h2>Sign In</h2>
-            <p>Access secure script execution</p>
-            <div class="auth-btns">
-                <button class="auth-btn google" onclick="signInGoogle()">
-                    <svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 7v4h4.6c-.2 1-1.2 1.8-4.6 1.8-2.8 0-5-2.2-5-5s2.2-5 5-5c1.4 0 2.5.6 3 1.1l2-2C12.4 1.3 10.8 1 9 1 4.5 1 1 4.5 1 9s3.5 8 8 8c4.6 0 7.7-3.2 7.7-7.7 0-.5 0-1-.1-1.3H9z" fill="currentColor"/></svg>
-                    Continue with Google
-                </button>
-                <button class="auth-btn roblox" onclick="signInRoblox()">
-                    <svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 2h6v6H2V2zm8 0h6v6h-6V2zM2 10h6v6H2v-6zm8 0h6v6h-6v-6z" fill="currentColor"/></svg>
-                    Continue with Roblox
-                </button>
-            </div>
-        </div>
+    <div class="toast" id="toast">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <span>Coming soon! Stay tuned.</span>
     </div>
 
-    <!-- Linkvertise Modal -->
-    <div class="modal" id="lv-modal">
-        <div class="modal-box">
-            <button class="modal-close" onclick="closeModal('lv-modal')">&times;</button>
-            <h3>Link Linkvertise</h3>
-            <p>Enter your API key</p>
-            <input type="text" id="lv-key" placeholder="lv_xxxxxxxx">
-            <button class="btn btn-glow btn-full" onclick="confirmLV()">Link Account</button>
-        </div>
-    </div>
+    
+<script>
+// ============================================
+// Roblox Auth App — Main JavaScript
+// ============================================
 
-    <!-- LootLabs Modal -->
-    <div class="modal" id="ll-modal">
-        <div class="modal-box">
-            <button class="modal-close" onclick="closeModal('ll-modal')">&times;</button>
-            <h3>Link LootLabs</h3>
-            <p>Enter your API key</p>
-            <input type="text" id="ll-key" placeholder="ll_xxxxxxxx">
-            <button class="btn btn-glow btn-full" onclick="confirmLL()">Link Account</button>
-        </div>
-    </div>
+document.addEventListener('DOMContentLoaded', function() {
+    initMobileMenu();
+    initSmoothScroll();
+    initNavbarScroll();
+    initActiveLinkHighlight();
+});
 
-    <!-- Toast -->
-    <div class="toast-box" id="toast-box"></div>
+// Mobile Menu Toggle
+function initMobileMenu() {
+    const menuBtn = document.getElementById('mobileMenuBtn');
+    const mobileNav = document.getElementById('mobileNav');
 
-    <script src="https://zurai02.is-a.dev/Zurai02-Development/app.js"></script>
+    if (!menuBtn || !mobileNav) return;
+
+    menuBtn.addEventListener('click', function() {
+        mobileNav.classList.toggle('open');
+        menuBtn.classList.toggle('active');
+
+        // Animate hamburger to X
+        const spans = menuBtn.querySelectorAll('span');
+        if (mobileNav.classList.contains('open')) {
+            spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+            spans[1].style.opacity = '0';
+            spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+        } else {
+            spans[0].style.transform = 'none';
+            spans[1].style.opacity = '1';
+            spans[2].style.transform = 'none';
+        }
+    });
+
+    // Close mobile menu when clicking a link
+    mobileNav.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileNav.classList.remove('open');
+            const spans = menuBtn.querySelectorAll('span');
+            spans[0].style.transform = 'none';
+            spans[1].style.opacity = '1';
+            spans[2].style.transform = 'none';
+        });
+    });
+}
+
+// Smooth Scroll for Anchor Links
+function initSmoothScroll() {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
+
+// Navbar Scroll Effect
+function initNavbarScroll() {
+    const navbar = document.querySelector('.navbar');
+    if (!navbar) return;
+
+    let lastScroll = 0;
+
+    window.addEventListener('scroll', function() {
+        const currentScroll = window.pageYOffset;
+
+        // Add shadow on scroll
+        if (currentScroll > 10) {
+            navbar.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)';
+        } else {
+            navbar.style.boxShadow = 'none';
+        }
+
+        lastScroll = currentScroll;
+    });
+}
+
+// Active Link Highlighting in TOC
+function initActiveLinkHighlight() {
+    const sections = document.querySelectorAll('.legal-content section');
+    const tocLinks = document.querySelectorAll('.legal-toc a');
+
+    if (!sections.length || !tocLinks.length) return;
+
+    const observerOptions = {
+        root: null,
+        rootMargin: '-20% 0px -60% 0px',
+        threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.getAttribute('id');
+                tocLinks.forEach(link => {
+                    link.style.background = '';
+                    link.style.color = '';
+                    if (link.getAttribute('href') === '#' + id) {
+                        link.style.background = 'var(--bg-tertiary)';
+                        link.style.color = 'var(--text-primary)';
+                    }
+                });
+            }
+        });
+    }, observerOptions);
+
+    sections.forEach(section => observer.observe(section));
+}
+
+// Toast Notification
+function showComingSoon() {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Intersection Observer for fade-in animations
+function initFadeInAnimations() {
+    const fadeElements = document.querySelectorAll('.feature-card, .legal-card');
+
+    const fadeObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, { threshold: 0.1 });
+
+    fadeElements.forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        fadeObserver.observe(el);
+    });
+}
+
+// Initialize fade-in animations on home page
+if (document.querySelector('.hero')) {
+    document.addEventListener('DOMContentLoaded', initFadeInAnimations);
+}
+
+</script>
 </body>
-</html>
+    </html>
