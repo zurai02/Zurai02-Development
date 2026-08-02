@@ -1,1279 +1,272 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy — Roblox Auth App</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-/* ============================================
-   Roblox Auth App — Global Styles
-   ============================================ */
-
-:root {
-    --bg-primary: #0a0a0f;
-    --bg-secondary: #111118;
-    --bg-tertiary: #1a1a24;
-    --bg-card: #13131c;
-    --bg-hover: #1e1e2a;
-
-    --text-primary: #f0f0f5;
-    --text-secondary: #a0a0b0;
-    --text-muted: #6b6b7b;
-    --text-accent: #e0e0f0;
-
-    --accent-primary: #6366f1;
-    --accent-secondary: #8b5cf6;
-    --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-    --accent-glow: rgba(99, 102, 241, 0.3);
-
-    --border-color: #1f1f2e;
-    --border-hover: #2a2a3e;
-
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 24px;
-
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
-    --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
-
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-html {
-    scroll-behavior: smooth;
-    scroll-padding-top: 80px;
-}
-
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    line-height: 1.6;
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-
-a {
-    color: var(--accent-primary);
-    text-decoration: none;
-    transition: var(--transition);
-}
-
-a:hover {
-    color: var(--accent-secondary);
-}
-
-/* ============================================
-   NAVIGATION
-   ============================================ */
-
-.navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 32px;
-    height: 64px;
-    background: rgba(10, 10, 15, 0.8);
-    backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.nav-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--text-primary);
-}
-
-.nav-brand a {
-    color: var(--text-primary);
-    text-decoration: none;
-}
-
-.nav-brand a:hover {
-    color: var(--text-primary);
-}
-
-.logo-icon {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--accent-gradient);
-    border-radius: var(--radius-sm);
-    color: white;
-}
-
-.logo-icon svg {
-    stroke: white;
-}
-
-.nav-links {
-    display: flex;
-    gap: 4px;
-}
-
-.nav-link {
-    padding: 8px 16px;
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: var(--transition);
-}
-
-.nav-link:hover {
-    color: var(--text-primary);
-    background: var(--bg-tertiary);
-}
-
-.nav-link.active {
-    color: var(--text-primary);
-    background: var(--bg-tertiary);
-}
-
-.mobile-menu-btn {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-}
-
-.mobile-menu-btn span {
-    display: block;
-    width: 22px;
-    height: 2px;
-    background: var(--text-primary);
-    border-radius: 2px;
-    transition: var(--transition);
-}
-
-.mobile-nav {
-    display: none;
-    position: fixed;
-    top: 64px;
-    left: 0;
-    right: 0;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    padding: 16px;
-    flex-direction: column;
-    gap: 4px;
-    z-index: 999;
-    transform: translateY(-100%);
-    opacity: 0;
-    transition: var(--transition);
-}
-
-.mobile-nav.open {
-    transform: translateY(0);
-    opacity: 1;
-}
-
-.mobile-link {
-    padding: 12px 16px;
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-weight: 500;
-    transition: var(--transition);
-}
-
-.mobile-link:hover,
-.mobile-link.active {
-    color: var(--text-primary);
-    background: var(--bg-tertiary);
-}
-
-/* ============================================
-   HERO SECTION (Home Page)
-   ============================================ */
-
-.hero {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 120px 64px 80px;
-    max-width: 1400px;
-    margin: 0 auto;
-    gap: 64px;
-}
-
-.hero-content {
-    flex: 1;
-    max-width: 560px;
-}
-
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 100px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin-bottom: 24px;
-}
-
-.badge-dot {
-    width: 6px;
-    height: 6px;
-    background: #22c55e;
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-.hero-title {
-    font-size: 3.5rem;
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.03em;
-    margin-bottom: 20px;
-}
-
-.gradient-text {
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.hero-subtitle {
-    font-size: 1.15rem;
-    color: var(--text-secondary);
-    line-height: 1.7;
-    margin-bottom: 32px;
-    max-width: 480px;
-}
-
-.hero-buttons {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: var(--radius-md);
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    border: none;
-    text-decoration: none;
-}
-
-.btn-primary {
-    background: var(--accent-gradient);
-    color: white;
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
-    color: white;
-}
-
-.btn-secondary {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-hover);
-    color: var(--text-primary);
-}
-
-/* Hero Visual */
-.hero-visual {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-}
-
-.card-stack {
-    position: relative;
-    width: 100%;
-    max-width: 400px;
-}
-
-.feature-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 28px;
-    margin-bottom: 16px;
-    transition: var(--transition);
-    position: relative;
-    overflow: hidden;
-}
-
-.feature-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
-    opacity: 0;
-    transition: var(--transition);
-}
-
-.feature-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--border-hover);
-    box-shadow: var(--shadow-glow);
-}
-
-.feature-card:hover::before {
-    opacity: 1;
-}
-
-.card-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-}
-
-.card-icon.shield { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
-.card-icon.bolt { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-.card-icon.lock { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
-
-.feature-card h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 6px;
-}
-
-.feature-card p {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-}
-
-/* ============================================
-   LEGAL SECTION (Home Page)
-   ============================================ */
-
-.legal-section {
-    padding: 80px 64px;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.legal-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-}
-
-.legal-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 32px;
-    text-decoration: none;
-    color: inherit;
-    position: relative;
-    overflow: hidden;
-    transition: var(--transition);
-}
-
-.legal-card:hover {
-    border-color: var(--accent-primary);
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-glow);
-    color: inherit;
-}
-
-.legal-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--radius-md);
-    background: var(--bg-tertiary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent-primary);
-    margin-bottom: 20px;
-}
-
-.legal-card h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.legal-card p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
-
-.legal-arrow {
-    position: absolute;
-    top: 32px;
-    right: 32px;
-    font-size: 1.5rem;
-    color: var(--text-muted);
-    transition: var(--transition);
-}
-
-.legal-card:hover .legal-arrow {
-    color: var(--accent-primary);
-    transform: translateX(4px);
-}
-
-/* ============================================
-   LEGAL PAGES (TOS & Privacy)
-   ============================================ */
-
-.legal-page {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 120px 32px 80px;
-}
-
-.legal-header {
-    text-align: center;
-    margin-bottom: 48px;
-    padding-bottom: 48px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.legal-badge {
-    display: inline-block;
-    padding: 6px 16px;
-    background: rgba(99, 102, 241, 0.1);
-    color: var(--accent-primary);
-    border-radius: 100px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 20px;
-}
-
-.legal-badge.privacy {
-    background: rgba(34, 197, 94, 0.1);
-    color: #22c55e;
-}
-
-.legal-header h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    margin-bottom: 12px;
-}
-
-.legal-date {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-/* Table of Contents */
-.legal-toc {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 28px 32px;
-    margin-bottom: 48px;
-    position: sticky;
-    top: 80px;
-}
-
-.legal-toc h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 16px;
-    color: var(--text-accent);
-}
-
-.legal-toc ul {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-}
-
-.legal-toc li a {
-    display: block;
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: var(--transition);
-}
-
-.legal-toc li a:hover {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-}
-
-/* Legal Content */
-.legal-content {
-    display: flex;
-    flex-direction: column;
-    gap: 48px;
-}
-
-.legal-content section {
-    scroll-margin-top: 100px;
-}
-
-.legal-content h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 16px;
-    color: var(--text-accent);
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.legal-content h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 24px 0 12px;
-    color: var(--text-primary);
-}
-
-.legal-content p {
-    color: var(--text-secondary);
-    margin-bottom: 14px;
-    line-height: 1.8;
-}
-
-.legal-content ul {
-    list-style: none;
-    padding-left: 0;
-    margin-bottom: 16px;
-}
-
-.legal-content ul li {
-    position: relative;
-    padding-left: 24px;
-    margin-bottom: 10px;
-    color: var(--text-secondary);
-    line-height: 1.7;
-}
-
-.legal-content ul li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 10px;
-    width: 6px;
-    height: 6px;
-    background: var(--accent-primary);
-    border-radius: 50%;
-}
-
-.legal-content strong {
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-.contact-box {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 24px;
-    margin-top: 16px;
-}
-
-.contact-box p {
-    margin-bottom: 8px;
-}
-
-.contact-box p:last-child {
-    margin-bottom: 0;
-}
-
-/* ============================================
-   FOOTER
-   ============================================ */
-
-.footer {
-    border-top: 1px solid var(--border-color);
-    padding: 40px 32px;
-    margin-top: auto;
-}
-
-.footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-
-.footer-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.footer-links {
-    display: flex;
-    gap: 24px;
-}
-
-.footer-links a {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.footer-links a:hover {
-    color: var(--text-secondary);
-}
-
-.footer-copy {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-}
-
-/* ============================================
-   TOAST NOTIFICATION
-   ============================================ */
-
-.toast {
-    position: fixed;
-    bottom: 32px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 14px 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    box-shadow: var(--shadow-lg);
-    opacity: 0;
-    transition: var(--transition);
-    z-index: 2000;
-    pointer-events: none;
-}
-
-.toast.show {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-}
-
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
-
-@media (max-width: 1024px) {
-    .hero {
-        flex-direction: column;
-        text-align: center;
-        padding: 120px 32px 60px;
-    }
-
-    .hero-content {
-        max-width: 100%;
-    }
-
-    .hero-subtitle {
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .hero-buttons {
-        justify-content: center;
-    }
-
-    .hero-visual {
-        width: 100%;
-        max-width: 500px;
-    }
-
-    .legal-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 768px) {
-    .nav-links {
-        display: none;
-    }
-
-    .mobile-menu-btn {
-        display: flex;
-    }
-
-    .mobile-nav {
-        display: flex;
-    }
-
-    .hero {
-        padding: 100px 20px 40px;
-    }
-
-    .hero-title {
-        font-size: 2.2rem;
-    }
-
-    .legal-section {
-        padding: 40px 20px;
-    }
-
-    .legal-page {
-        padding: 100px 20px 60px;
-    }
-
-    .legal-header h1 {
-        font-size: 1.8rem;
-    }
-
-    .legal-toc {
-        position: static;
-    }
-
-    .legal-toc ul {
-        grid-template-columns: 1fr;
-    }
-
-    .footer-content {
-        flex-direction: column;
-        text-align: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .navbar {
-        padding: 0 16px;
-    }
-
-    .hero-title {
-        font-size: 1.8rem;
-    }
-
-    .btn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .legal-card {
-        padding: 24px;
-    }
-}
-
-/* ============================================
-   SCROLLBAR STYLING
-   ============================================ */
-
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--bg-primary);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--bg-tertiary);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--border-hover);
-}
-
-/* ============================================
-   SELECTION STYLING
-   ============================================ */
-
-::selection {
-    background: rgba(99, 102, 241, 0.3);
-    color: var(--text-primary);
-}
-
-</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Roblox Auth App</title>
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <base target="_blank">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-brand">
-            <div class="logo-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                    <path d="M2 17l10 5 10-5"/>
-                    <path d="M2 12l10 5 10-5"/>
-                </svg>
-            </div>
-            <a href="index.html" class="brand-text">RobloxAuth</a>
-        </div>
-        <div class="nav-links">
-            <a href="index.html" class="nav-link">Home</a>
-            <a href="tos.html" class="nav-link">Terms of Service</a>
-            <a href="privacy-policy.html" class="nav-link active">Privacy Policy</a>
-        </div>
-        <button class="mobile-menu-btn" id="mobileMenuBtn">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-    </nav>
 
-    <div class="mobile-nav" id="mobileNav">
-        <a href="index.html" class="mobile-link">Home</a>
-        <a href="tos.html" class="mobile-link">Terms of Service</a>
-        <a href="privacy-policy.html" class="mobile-link active">Privacy Policy</a>
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="logo-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
     </div>
+    <a href="index.html" class="brand-text">RobloxAuth</a>
+  </div>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="tos.html" class="nav-link">Terms of Service</a>
+    <a href="privacy-policy.html" class="nav-link active">Privacy Policy</a>
+  </div>
+  <button class="mobile-menu-btn" id="mobileMenuBtn">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
 
-    <main class="legal-page">
-        <div class="legal-header">
-            <div class="legal-badge privacy">Privacy</div>
-            <h1>Privacy Policy</h1>
-            <p class="legal-date">Last Updated: August 1, 2026</p>
-        </div>
+<div class="mobile-nav" id="mobileNav">
+  <a href="index.html" class="mobile-link">Home</a>
+  <a href="tos.html" class="mobile-link">Terms of Service</a>
+  <a href="privacy-policy.html" class="mobile-link active">Privacy Policy</a>
+</div>
 
-        <div class="legal-toc">
-            <h3>Table of Contents</h3>
-            <ul>
-                <li><a href="#intro">1. Introduction</a></li>
-                <li><a href="#collect">2. Information We Collect</a></li>
-                <li><a href="#how">3. How We Use Your Information</a></li>
-                <li><a href="#share">4. How We Share Information</a></li>
-                <li><a href="#roblox-data">5. Roblox Data Handling</a></li>
-                <li><a href="#cookies">6. Cookies & Tracking</a></li>
-                <li><a href="#security">7. Data Security</a></li>
-                <li><a href="#retention">8. Data Retention</a></li>
-                <li><a href="#rights">9. Your Rights & Choices</a></li>
-                <li><a href="#children">10. Children's Privacy</a></li>
-                <li><a href="#third">11. Third-Party Services</a></li>
-                <li><a href="#international">12. International Data Transfers</a></li>
-                <li><a href="#changes">13. Changes to This Policy</a></li>
-                <li><a href="#contact">14. Contact Us</a></li>
-            </ul>
-        </div>
+<main class="legal-page">
+  <div class="legal-header">
+    <div class="legal-badge privacy">Privacy</div>
+    <h1>Privacy Policy</h1>
+    <p class="legal-date">Last Updated: August 1, 2026</p>
+  </div>
 
-        <div class="legal-content">
-            <section id="intro">
-                <h2>1. Introduction</h2>
-                <p>This Privacy Policy explains how the Roblox Auth App ("we," "us," or "our") collects, uses, stores, and protects your personal information when you use our authentication and verification services ("the Service").</p>
-                <p>We are committed to protecting your privacy and handling your data with transparency. This policy applies to all users of the Service, including Roblox players, developers, and website visitors.</p>
-                <p>By using the Service, you consent to the collection and use of information in accordance with this policy. If you do not agree with this policy, please do not use the Service.</p>
-            </section>
+  <div class="legal-toc">
+    <h3>Table of Contents</h3>
+    <ul>
+      <li><a href="#intro">1. Introduction</a></li>
+      <li><a href="#collect">2. Information We Collect</a></li>
+      <li><a href="#how">3. How We Use Your Information</a></li>
+      <li><a href="#share">4. How We Share Information</a></li>
+      <li><a href="#roblox-data">5. Roblox Data Handling</a></li>
+      <li><a href="#cookies">6. Cookies & Tracking</a></li>
+      <li><a href="#security">7. Data Security</a></li>
+      <li><a href="#retention">8. Data Retention</a></li>
+      <li><a href="#rights">9. Your Rights & Choices</a></li>
+      <li><a href="#children">10. Children's Privacy</a></li>
+      <li><a href="#third">11. Third-Party Services</a></li>
+      <li><a href="#international">12. International Data Transfers</a></li>
+      <li><a href="#changes">13. Changes to This Policy</a></li>
+      <li><a href="#contact">14. Contact Us</a></li>
+    </ul>
+  </div>
 
-            <section id="collect">
-                <h2>2. Information We Collect</h2>
-                <p>We collect several types of information to provide and improve our Service:</p>
+  <div class="legal-content">
+    <section id="intro">
+      <h2>1. Introduction</h2>
+      <p>This Privacy Policy explains how the Roblox Auth App ("we," "us," or "our") collects, uses, stores, and protects your personal information when you use our authentication and verification services ("the Service").</p>
+      <p>We are committed to protecting your privacy and handling your data with transparency. This policy applies to all users of the Service, including Roblox players, developers, and website visitors.</p>
+      <p>By using the Service, you consent to the collection and use of information in accordance with this policy. If you do not agree with this policy, please do not use the Service.</p>
+    </section>
 
-                <h3>2.1 Information You Provide Directly</h3>
-                <ul>
-                    <li><strong>Roblox Account Information:</strong> When you authenticate via Roblox OAuth, we receive your public Roblox profile data including your User ID, username, display name, avatar, and profile description;</li>
-                    <li><strong>Contact Information:</strong> If you contact us for support, we may collect your email address and Discord username;</li>
-                    <li><strong>Developer Information:</strong> If you register as a developer, we may collect your application name, webhook URLs, and API usage preferences.</li>
-                </ul>
+    <section id="collect">
+      <h2>2. Information We Collect</h2>
+      <p>We collect several types of information to provide and improve our Service:</p>
+      <h3>2.1 Information You Provide Directly</h3>
+      <ul>
+        <li><strong>Roblox Account Information:</strong> When you authenticate via Roblox OAuth, we receive your public Roblox profile data including your User ID, username, display name, avatar, and profile description;</li>
+        <li><strong>Contact Information:</strong> If you contact us for support, we may collect your email address and Discord username;</li>
+        <li><strong>Developer Information:</strong> If you register as a developer, we may collect your application name, webhook URLs, and API usage preferences.</li>
+      </ul>
+      <h3>2.2 Information Collected Automatically</h3>
+      <ul>
+        <li><strong>Log Data:</strong> Your IP address, browser type, operating system, referring URLs, pages visited, and timestamps;</li>
+        <li><strong>Device Information:</strong> Device type, screen resolution, and browser language;</li>
+        <li><strong>Usage Data:</strong> How you interact with the Service, including authentication attempts, API calls, and feature usage.</li>
+      </ul>
+      <h3>2.3 Information from Third Parties</h3>
+      <ul>
+        <li><strong>Roblox Corporation:</strong> Public profile data via the official Roblox API, subject to their privacy practices;</li>
+        <li><strong>Analytics Providers:</strong> Aggregated, anonymized usage statistics from services like Google Analytics or Plausible.</li>
+      </ul>
+    </section>
 
-                <h3>2.2 Information Collected Automatically</h3>
-                <ul>
-                    <li><strong>Log Data:</strong> Your IP address, browser type, operating system, referring URLs, pages visited, and timestamps;</li>
-                    <li><strong>Device Information:</strong> Device type, screen resolution, and browser language;</li>
-                    <li><strong>Usage Data:</strong> How you interact with the Service, including authentication attempts, API calls, and feature usage.</li>
-                </ul>
+    <section id="how">
+      <h2>3. How We Use Your Information</h2>
+      <p>We use the information we collect for the following purposes:</p>
+      <ul>
+        <li><strong>Authentication & Verification:</strong> To verify your Roblox identity and provide secure login services;</li>
+        <li><strong>Service Provision:</strong> To operate, maintain, and improve the functionality of the Service;</li>
+        <li><strong>Security:</strong> To detect, prevent, and address fraud, abuse, security risks, and technical issues;</li>
+        <li><strong>Analytics:</strong> To understand how users interact with the Service and improve user experience;</li>
+        <li><strong>Communication:</strong> To respond to your inquiries, provide support, and send service-related notifications;</li>
+        <li><strong>Legal Compliance:</strong> To comply with applicable laws, regulations, and legal processes;</li>
+        <li><strong>Enforcement:</strong> To enforce our Terms of Service and protect the rights of our users and the public.</li>
+      </ul>
+      <p>We do <strong>not</strong> use your personal information for targeted advertising, and we do <strong>not</strong> sell your personal data to third parties.</p>
+    </section>
 
-                <h3>2.3 Information from Third Parties</h3>
-                <ul>
-                    <li><strong>Roblox Corporation:</strong> Public profile data via the official Roblox API, subject to their privacy practices;</li>
-                    <li><strong>Analytics Providers:</strong> Aggregated, anonymized usage statistics from services like Google Analytics or Plausible.</li>
-                </ul>
-            </section>
+    <section id="share">
+      <h2>4. How We Share Information</h2>
+      <p>We do not sell, trade, or rent your personal information to others. We may share information only in the following limited circumstances:</p>
+      <ul>
+        <li><strong>With Your Consent:</strong> We may share information when you explicitly authorize us to do so;</li>
+        <li><strong>Service Providers:</strong> We engage trusted third-party companies to perform functions on our behalf (e.g., hosting, analytics). These providers have access only to the information necessary to perform their functions and are contractually obligated to protect your data;</li>
+        <li><strong>Legal Requirements:</strong> We may disclose information if required by law, subpoena, or other legal process, or if we believe in good faith that disclosure is necessary to protect our rights, your safety, or the safety of others;</li>
+        <li><strong>Business Transfers:</strong> In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction, subject to the same privacy protections.</li>
+      </ul>
+    </section>
 
-            <section id="how">
-                <h2>3. How We Use Your Information</h2>
-                <p>We use the information we collect for the following purposes:</p>
-                <ul>
-                    <li><strong>Authentication & Verification:</strong> To verify your Roblox identity and provide secure login services;</li>
-                    <li><strong>Service Provision:</strong> To operate, maintain, and improve the functionality of the Service;</li>
-                    <li><strong>Security:</strong> To detect, prevent, and address fraud, abuse, security risks, and technical issues;</li>
-                    <li><strong>Analytics:</strong> To understand how users interact with the Service and improve user experience;</li>
-                    <li><strong>Communication:</strong> To respond to your inquiries, provide support, and send service-related notifications;</li>
-                    <li><strong>Legal Compliance:</strong> To comply with applicable laws, regulations, and legal processes;</li>
-                    <li><strong>Enforcement:</strong> To enforce our Terms of Service and protect the rights of our users and the public.</li>
-                </ul>
-                <p>We do <strong>not</strong> use your personal information for targeted advertising, and we do <strong>not</strong> sell your personal data to third parties.</p>
-            </section>
+    <section id="roblox-data">
+      <h2>5. Roblox Data Handling</h2>
+      <p>Our Service integrates with the Roblox platform. Here is how we specifically handle Roblox-related data:</p>
+      <h3>5.1 What We Access</h3>
+      <p>Through Roblox's official OAuth API, we access only the following <strong>public</strong> information with your explicit consent:</p>
+      <ul>
+        <li>Roblox User ID</li>
+        <li>Username and display name</li>
+        <li>Public avatar thumbnail URL</li>
+        <li>Account creation date</li>
+        <li>Public profile description</li>
+      </ul>
+      <h3>5.2 What We Do NOT Access</h3>
+      <p>We explicitly do <strong>not</strong> access, store, or process:</p>
+      <ul>
+        <li>Your Roblox password or authentication credentials;</li>
+        <li>Private messages, chat logs, or friend lists;</li>
+        <li>Robux balance, purchase history, or transaction data;</li>
+        <li>Private inventory or game data;</li>
+        <li>Any data you have set to private in your Roblox privacy settings.</li>
+      </ul>
+      <h3>5.3 OAuth Tokens</h3>
+      <p>When you authenticate, Roblox provides temporary access tokens. These tokens:</p>
+      <ul>
+        <li>Are stored securely using industry-standard encryption (AES-256);</li>
+        <li>Are never logged in plain text;</li>
+        <li>Expire automatically after a short period (typically 1 hour);</li>
+        <li>Can be revoked by you at any time through your Roblox account settings.</li>
+      </ul>
+    </section>
 
-            <section id="share">
-                <h2>4. How We Share Information</h2>
-                <p>We do not sell, trade, or rent your personal information to others. We may share information only in the following limited circumstances:</p>
-                <ul>
-                    <li><strong>With Your Consent:</strong> We may share information when you explicitly authorize us to do so;</li>
-                    <li><strong>Service Providers:</strong> We engage trusted third-party companies to perform functions on our behalf (e.g., hosting, analytics). These providers have access only to the information necessary to perform their functions and are contractually obligated to protect your data;</li>
-                    <li><strong>Legal Requirements:</strong> We may disclose information if required by law, subpoena, or other legal process, or if we believe in good faith that disclosure is necessary to protect our rights, your safety, or the safety of others;</li>
-                    <li><strong>Business Transfers:</strong> In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction, subject to the same privacy protections.</li>
-                </ul>
-            </section>
+    <section id="cookies">
+      <h2>6. Cookies & Tracking Technologies</h2>
+      <p>We use cookies and similar tracking technologies to enhance your experience:</p>
+      <h3>6.1 Essential Cookies</h3>
+      <p>These are necessary for the Service to function and cannot be disabled. They include session cookies that maintain your login state and security tokens.</p>
+      <h3>6.2 Analytics Cookies</h3>
+      <p>We use privacy-focused analytics (e.g., Plausible or Fathom) that do not use cookies or track you across websites. If we use traditional analytics, we anonymize IP addresses and respect Do Not Track signals.</p>
+      <h3>6.3 Your Choices</h3>
+      <p>Most web browsers allow you to control cookies through their settings. You can set your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you disable cookies, some features of the Service may not function properly.</p>
+    </section>
 
-            <section id="roblox-data">
-                <h2>5. Roblox Data Handling</h2>
-                <p>Our Service integrates with the Roblox platform. Here is how we specifically handle Roblox-related data:</p>
+    <section id="security">
+      <h2>7. Data Security</h2>
+      <p>We take the security of your data seriously and implement appropriate technical and organizational measures:</p>
+      <ul>
+        <li><strong>Encryption:</strong> All data in transit is protected using TLS 1.3 (HTTPS). Sensitive data at rest is encrypted using AES-256;</li>
+        <li><strong>Access Controls:</strong> Strict role-based access controls limit who can access your data;</li>
+        <li><strong>Regular Audits:</strong> We conduct regular security assessments and vulnerability scans;</li>
+        <li><strong>Incident Response:</strong> We have a documented incident response plan for data breaches;</li>
+        <li><strong>Minimal Data:</strong> We collect only the data necessary to provide the Service (data minimization principle).</li>
+      </ul>
+      <p>While we strive to use commercially acceptable means to protect your personal information, no method of transmission over the Internet or electronic storage is 100% secure. We cannot guarantee absolute security.</p>
+    </section>
 
-                <h3>5.1 What We Access</h3>
-                <p>Through Roblox's official OAuth API, we access only the following <strong>public</strong> information with your explicit consent:</p>
-                <ul>
-                    <li>Roblox User ID</li>
-                    <li>Username and display name</li>
-                    <li>Public avatar thumbnail URL</li>
-                    <li>Account creation date</li>
-                    <li>Public profile description</li>
-                </ul>
+    <section id="retention">
+      <h2>8. Data Retention</h2>
+      <p>We retain your personal information only for as long as necessary to fulfill the purposes for which it was collected:</p>
+      <ul>
+        <li><strong>Authentication Data:</strong> Retained for the duration of your active use of the Service, plus 90 days after account deletion for fraud prevention;</li>
+        <li><strong>Log Data:</strong> Retained for 30 days, then automatically purged;</li>
+        <li><strong>Analytics Data:</strong> Retained in aggregated, anonymized form indefinitely;</li>
+        <li><strong>Support Communications:</strong> Retained for 1 year after resolution of your inquiry.</li>
+      </ul>
+      <p>When we no longer need your personal information, we will securely delete or anonymize it in accordance with our data retention schedule.</p>
+    </section>
 
-                <h3>5.2 What We Do NOT Access</h3>
-                <p>We explicitly do <strong>not</strong> access, store, or process:</p>
-                <ul>
-                    <li>Your Roblox password or authentication credentials;</li>
-                    <li>Private messages, chat logs, or friend lists;</li>
-                    <li>Robux balance, purchase history, or transaction data;</li>
-                    <li>Private inventory or game data;</li>
-                    <li>Any data you have set to private in your Roblox privacy settings.</li>
-                </ul>
+    <section id="rights">
+      <h2>9. Your Rights & Choices</h2>
+      <p>Depending on your location, you may have the following rights regarding your personal data:</p>
+      <ul>
+        <li><strong>Access:</strong> Request a copy of the personal data we hold about you;</li>
+        <li><strong>Correction:</strong> Request that we correct inaccurate or incomplete data;</li>
+        <li><strong>Deletion:</strong> Request deletion of your personal data ("right to be forgotten");</li>
+        <li><strong>Restriction:</strong> Request that we limit the processing of your data;</li>
+        <li><strong>Portability:</strong> Request a copy of your data in a structured, machine-readable format;</li>
+        <li><strong>Objection:</strong> Object to the processing of your data for specific purposes;</li>
+        <li><strong>Withdraw Consent:</strong> Withdraw your consent at any time (without affecting the lawfulness of processing based on consent before its withdrawal).</li>
+      </ul>
+      <p>To exercise any of these rights, please contact us using the information in Section 14. We will respond within 30 days.</p>
+    </section>
 
-                <h3>5.3 OAuth Tokens</h3>
-                <p>When you authenticate, Roblox provides temporary access tokens. These tokens:</p>
-                <ul>
-                    <li>Are stored securely using industry-standard encryption (AES-256);</li>
-                    <li>Are never logged in plain text;</li>
-                    <li>Expire automatically after a short period (typically 1 hour);</li>
-                    <li>Can be revoked by you at any time through your Roblox account settings.</li>
-                </ul>
-            </section>
+    <section id="children">
+      <h2>10. Children's Privacy</h2>
+      <p>The Service is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information without your consent, please contact us immediately, and we will take steps to delete that information.</p>
+      <p>For users aged 13–17, we recommend parental guidance when using the Service and encourage parents to review this Privacy Policy with their children.</p>
+    </section>
 
-            <section id="cookies">
-                <h2>6. Cookies & Tracking Technologies</h2>
-                <p>We use cookies and similar tracking technologies to enhance your experience:</p>
+    <section id="third">
+      <h2>11. Third-Party Services</h2>
+      <p>The Service may contain links to third-party websites or services that are not owned or controlled by us, including:</p>
+      <ul>
+        <li><strong>Roblox Corporation:</strong> Subject to their <a href="https://en.help.roblox.com/hc/en-us/articles/115004630823" target="_blank">Privacy Policy</a>;</li>
+        <li><strong>Discord:</strong> If you join our community Discord server;</li>
+        <li><strong>GitHub:</strong> If you access our open-source repositories.</li>
+      </ul>
+      <p>We have no control over, and assume no responsibility for, the content, privacy policies, or practices of any third-party websites or services. We strongly advise you to review the privacy policies of any third-party sites you visit.</p>
+    </section>
 
-                <h3>6.1 Essential Cookies</h3>
-                <p>These are necessary for the Service to function and cannot be disabled. They include session cookies that maintain your login state and security tokens.</p>
+    <section id="international">
+      <h2>12. International Data Transfers</h2>
+      <p>Your information may be transferred to — and maintained on — computers located outside of your state, province, country, or other governmental jurisdiction where data protection laws may differ from those in your jurisdiction.</p>
+      <p>If you are located outside the United States and choose to provide information to us, please note that we transfer the data to the United States and process it there. Your consent to this Privacy Policy followed by your submission of such information represents your agreement to that transfer.</p>
+      <p>We ensure that any international transfers comply with applicable data protection laws, including the use of Standard Contractual Clauses where required.</p>
+    </section>
 
-                <h3>6.2 Analytics Cookies</h3>
-                <p>We use privacy-focused analytics (e.g., Plausible or Fathom) that do not use cookies or track you across websites. If we use traditional analytics, we anonymize IP addresses and respect Do Not Track signals.</p>
+    <section id="changes">
+      <h2>13. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. We will notify you of any changes by:</p>
+      <ul>
+        <li>Posting the new Privacy Policy on this page;</li>
+        <li>Updating the "Last Updated" date at the top of this policy;</li>
+        <li>Sending an email notification to the address associated with your account (for material changes).</li>
+      </ul>
+      <p>We encourage you to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.</p>
+    </section>
 
-                <h3>6.3 Your Choices</h3>
-                <p>Most web browsers allow you to control cookies through their settings. You can set your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you disable cookies, some features of the Service may not function properly.</p>
-            </section>
+    <section id="contact">
+      <h2>14. Contact Us</h2>
+      <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
+      <div class="contact-box">
+        <p><strong>Email:</strong> privacy@robloxauth.app</p>
+        <p><strong>Discord:</strong> discord.gg/robloxauth</p>
+        <p><strong>Data Protection Officer:</strong> dpo@robloxauth.app</p>
+        <p><strong>Response Time:</strong> Within 48 business hours</p>
+      </div>
+      <p>For formal data protection inquiries or complaints, you may also contact your local data protection authority.</p>
+    </section>
+  </div>
+</main>
 
-            <section id="security">
-                <h2>7. Data Security</h2>
-                <p>We take the security of your data seriously and implement appropriate technical and organizational measures:</p>
-                <ul>
-                    <li><strong>Encryption:</strong> All data in transit is protected using TLS 1.3 (HTTPS). Sensitive data at rest is encrypted using AES-256;</li>
-                    <li><strong>Access Controls:</strong> Strict role-based access controls limit who can access your data;</li>
-                    <li><strong>Regular Audits:</strong> We conduct regular security assessments and vulnerability scans;</li>
-                    <li><strong>Incident Response:</strong> We have a documented incident response plan for data breaches;</li>
-                    <li><strong>Minimal Data:</strong> We collect only the data necessary to provide the Service (data minimization principle).</li>
-                </ul>
-                <p>While we strive to use commercially acceptable means to protect your personal information, no method of transmission over the Internet or electronic storage is 100% secure. We cannot guarantee absolute security.</p>
-            </section>
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <span>RobloxAuth</span>
+    </div>
+    <div class="footer-links">
+      <a href="tos.html">Terms of Service</a>
+      <a href="privacy-policy.html">Privacy Policy</a>
+    </div>
+    <p class="footer-copy">© 2026 RobloxAuth. All rights reserved.</p>
+  </div>
+</footer>
 
-            <section id="retention">
-                <h2>8. Data Retention</h2>
-                <p>We retain your personal information only for as long as necessary to fulfill the purposes for which it was collected:</p>
-                <ul>
-                    <li><strong>Authentication Data:</strong> Retained for the duration of your active use of the Service, plus 90 days after account deletion for fraud prevention;</li>
-                    <li><strong>Log Data:</strong> Retained for 30 days, then automatically purged;</li>
-                    <li><strong>Analytics Data:</strong> Retained in aggregated, anonymized form indefinitely;</li>
-                    <li><strong>Support Communications:</strong> Retained for 1 year after resolution of your inquiry.</li>
-                </ul>
-                <p>When we no longer need your personal information, we will securely delete or anonymize it in accordance with our data retention schedule.</p>
-            </section>
-
-            <section id="rights">
-                <h2>9. Your Rights & Choices</h2>
-                <p>Depending on your location, you may have the following rights regarding your personal data:</p>
-                <ul>
-                    <li><strong>Access:</strong> Request a copy of the personal data we hold about you;</li>
-                    <li><strong>Correction:</strong> Request that we correct inaccurate or incomplete data;</li>
-                    <li><strong>Deletion:</strong> Request deletion of your personal data ("right to be forgotten");</li>
-                    <li><strong>Restriction:</strong> Request that we limit the processing of your data;</li>
-                    <li><strong>Portability:</strong> Request a copy of your data in a structured, machine-readable format;</li>
-                    <li><strong>Objection:</strong> Object to the processing of your data for specific purposes;</li>
-                    <li><strong>Withdraw Consent:</strong> Withdraw your consent at any time (without affecting the lawfulness of processing based on consent before its withdrawal).</li>
-                </ul>
-                <p>To exercise any of these rights, please contact us using the information in Section 14. We will respond within 30 days.</p>
-            </section>
-
-            <section id="children">
-                <h2>10. Children's Privacy</h2>
-                <p>The Service is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information without your consent, please contact us immediately, and we will take steps to delete that information.</p>
-                <p>For users aged 13–17, we recommend parental guidance when using the Service and encourage parents to review this Privacy Policy with their children.</p>
-            </section>
-
-            <section id="third">
-                <h2>11. Third-Party Services</h2>
-                <p>The Service may contain links to third-party websites or services that are not owned or controlled by us, including:</p>
-                <ul>
-                    <li><strong>Roblox Corporation:</strong> Subject to their <a href="https://en.help.roblox.com/hc/en-us/articles/115004630823" target="_blank">Privacy Policy</a>;</li>
-                    <li><strong>Discord:</strong> If you join our community Discord server;</li>
-                    <li><strong>GitHub:</strong> If you access our open-source repositories.</li>
-                </ul>
-                <p>We have no control over, and assume no responsibility for, the content, privacy policies, or practices of any third-party websites or services. We strongly advise you to review the privacy policies of any third-party sites you visit.</p>
-            </section>
-
-            <section id="international">
-                <h2>12. International Data Transfers</h2>
-                <p>Your information may be transferred to — and maintained on — computers located outside of your state, province, country, or other governmental jurisdiction where data protection laws may differ from those in your jurisdiction.</p>
-                <p>If you are located outside the United States and choose to provide information to us, please note that we transfer the data to the United States and process it there. Your consent to this Privacy Policy followed by your submission of such information represents your agreement to that transfer.</p>
-                <p>We ensure that any international transfers comply with applicable data protection laws, including the use of Standard Contractual Clauses where required.</p>
-            </section>
-
-            <section id="changes">
-                <h2>13. Changes to This Policy</h2>
-                <p>We may update this Privacy Policy from time to time. We will notify you of any changes by:</p>
-                <ul>
-                    <li>Posting the new Privacy Policy on this page;</li>
-                    <li>Updating the "Last Updated" date at the top of this policy;</li>
-                    <li>Sending an email notification to the address associated with your account (for material changes).</li>
-                </ul>
-                <p>We encourage you to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.</p>
-            </section>
-
-            <section id="contact">
-                <h2>14. Contact Us</h2>
-                <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
-                <div class="contact-box">
-                    <p><strong>Email:</strong> privacy@robloxauth.app</p>
-                    <p><strong>Discord:</strong> discord.gg/robloxauth</p>
-                    <p><strong>Data Protection Officer:</strong> dpo@robloxauth.app</p>
-                    <p><strong>Response Time:</strong> Within 48 business hours</p>
-                </div>
-                <p>For formal data protection inquiries or complaints, you may also contact your local data protection authority.</p>
-            </section>
-        </div>
-    </main>
-
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-brand">
-                <div class="logo-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                        <path d="M2 17l10 5 10-5"/>
-                        <path d="M2 12l10 5 10-5"/>
-                    </svg>
-                </div>
-                <span>RobloxAuth</span>
-            </div>
-            <div class="footer-links">
-                <a href="tos.html">Terms of Service</a>
-                <a href="privacy-policy.html">Privacy Policy</a>
-            </div>
-            <p class="footer-copy">© 2026 RobloxAuth. All rights reserved.</p>
-        </div>
-    </footer>
-
-    
-<script>
-// ============================================
-// Roblox Auth App — Main JavaScript
-// ============================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    initMobileMenu();
-    initSmoothScroll();
-    initNavbarScroll();
-    initActiveLinkHighlight();
-});
-
-// Mobile Menu Toggle
-function initMobileMenu() {
-    const menuBtn = document.getElementById('mobileMenuBtn');
-    const mobileNav = document.getElementById('mobileNav');
-
-    if (!menuBtn || !mobileNav) return;
-
-    menuBtn.addEventListener('click', function() {
-        mobileNav.classList.toggle('open');
-        menuBtn.classList.toggle('active');
-
-        // Animate hamburger to X
-        const spans = menuBtn.querySelectorAll('span');
-        if (mobileNav.classList.contains('open')) {
-            spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
-            spans[1].style.opacity = '0';
-            spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
-        } else {
-            spans[0].style.transform = 'none';
-            spans[1].style.opacity = '1';
-            spans[2].style.transform = 'none';
-        }
-    });
-
-    // Close mobile menu when clicking a link
-    mobileNav.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            mobileNav.classList.remove('open');
-            const spans = menuBtn.querySelectorAll('span');
-            spans[0].style.transform = 'none';
-            spans[1].style.opacity = '1';
-            spans[2].style.transform = 'none';
-        });
-    });
-}
-
-// Smooth Scroll for Anchor Links
-function initSmoothScroll() {
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-}
-
-// Navbar Scroll Effect
-function initNavbarScroll() {
-    const navbar = document.querySelector('.navbar');
-    if (!navbar) return;
-
-    let lastScroll = 0;
-
-    window.addEventListener('scroll', function() {
-        const currentScroll = window.pageYOffset;
-
-        // Add shadow on scroll
-        if (currentScroll > 10) {
-            navbar.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)';
-        } else {
-            navbar.style.boxShadow = 'none';
-        }
-
-        lastScroll = currentScroll;
-    });
-}
-
-// Active Link Highlighting in TOC
-function initActiveLinkHighlight() {
-    const sections = document.querySelectorAll('.legal-content section');
-    const tocLinks = document.querySelectorAll('.legal-toc a');
-
-    if (!sections.length || !tocLinks.length) return;
-
-    const observerOptions = {
-        root: null,
-        rootMargin: '-20% 0px -60% 0px',
-        threshold: 0
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const id = entry.target.getAttribute('id');
-                tocLinks.forEach(link => {
-                    link.style.background = '';
-                    link.style.color = '';
-                    if (link.getAttribute('href') === '#' + id) {
-                        link.style.background = 'var(--bg-tertiary)';
-                        link.style.color = 'var(--text-primary)';
-                    }
-                });
-            }
-        });
-    }, observerOptions);
-
-    sections.forEach(section => observer.observe(section));
-}
-
-// Toast Notification
-function showComingSoon() {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-
-    toast.classList.add('show');
-
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
-}
-
-// Intersection Observer for fade-in animations
-function initFadeInAnimations() {
-    const fadeElements = document.querySelectorAll('.feature-card, .legal-card');
-
-    const fadeObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, { threshold: 0.1 });
-
-    fadeElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        fadeObserver.observe(el);
-    });
-}
-
-// Initialize fade-in animations on home page
-if (document.querySelector('.hero')) {
-    document.addEventListener('DOMContentLoaded', initFadeInAnimations);
-}
-
-</script>
+<script src="script.js"></script>
 </body>
-                                                                                                                                                            </html>
+</html>
