@@ -1,111 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terms of Service — Roblox Auth App</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-/* ============================================
-   Roblox Auth App — Global Styles
-   ============================================ */
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of Service — Roblox Auth App</title>
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<base target="_blank">
+</head>
+<body>
 
-:root {
-    --bg-primary: #0a0a0f;
-    --bg-secondary: #111118;
-    --bg-tertiary: #1a1a24;
-    --bg-card: #13131c;
-    --bg-hover: #1e1e2a;
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="logo-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <a href="index.html" class="brand-text">RobloxAuth</a>
+  </div>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="tos.html" class="nav-link active">Terms of Service</a>
+    <a href="privacy-policy.html" class="nav-link">Privacy Policy</a>
+  </div>
+  <button class="mobile-menu-btn" id="mobileMenuBtn">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
 
-    --text-primary: #f0f0f5;
-    --text-secondary: #a0a0b0;
-    --text-muted: #6b6b7b;
-    --text-accent: #e0e0f0;
+<div class="mobile-nav" id="mobileNav">
+  <a href="index.html" class="mobile-link">Home</a>
+  <a href="tos.html" class="mobile-link active">Terms of Service</a>
+  <a href="privacy-policy.html" class="mobile-link">Privacy Policy</a>
+</div>
 
-    --accent-primary: #6366f1;
-    --accent-secondary: #8b5cf6;
-    --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-    --accent-glow: rgba(99, 102, 241, 0.3);
+<main class="legal-page">
+  <div class="legal-header">
+    <div class="legal-badge">Legal</div>
+    <h1>Terms of Service</h1>
+    <p class="legal-date">Last Updated: August 1, 2026</p>
+  </div>
 
-    --border-color: #1f1f2e;
-    --border-hover: #2a2a3e;
+  <div class="legal-toc">
+    <h3>Table of Contents</h3>
+    <ul>
+      <li><a href="#acceptance">1. Acceptance of Terms</a></li>
+      <li><a href="#eligibility">2. Eligibility</a></li>
+      <li><a href="#account">3. Account & Authentication</a></li>
+      <li><a href="#service">4. Description of Service</a></li>
+      <li><a href="#conduct">5. User Conduct</a></li>
+      <li><a href="#roblox">6. Roblox Platform Rules</a></li>
+      <li><a href="#data">7. Data & API Usage</a></li>
+      <li><a href="#ip">8. Intellectual Property</a></li>
+      <li><a href="#termination">9. Termination</a></li>
+      <li><a href="#disclaimer">10. Disclaimer of Warranties</a></li>
+      <li><a href="#liability">11. Limitation of Liability</a></li>
+      <li><a href="#changes">12. Changes to Terms</a></li>
+      <li><a href="#contact">13. Contact Information</a></li>
+    </ul>
+  </div>
 
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 24px;
+  <div class="legal-content">
+    <section id="acceptance">
+      <h2>1. Acceptance of Terms</h2>
+      <p>By accessing or using the Roblox Auth App ("the Service," "we," "us," or "our"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to all of these Terms, you may not access or use the Service.</p>
+      <p>These Terms constitute a legally binding agreement between you and the operator of the Roblox Auth App. Your continued use of the Service following any changes to these Terms constitutes acceptance of those changes.</p>
+    </section>
 
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
-    --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
+    <section id="eligibility">
+      <h2>2. Eligibility</h2>
+      <p>You must be at least 13 years of age to use the Service. By using the Service, you represent and warrant that:</p>
+      <ul>
+        <li>You are at least 13 years old;</li>
+        <li>You have the legal capacity to enter into a binding contract;</li>
+        <li>You are not barred from using the Service under any applicable laws;</li>
+        <li>You have a valid Roblox account in good standing;</li>
+        <li>All information you provide is accurate, current, and complete.</li>
+      </ul>
+      <p>If you are under 18, you represent that you have the consent of a parent or legal guardian to use the Service.</p>
+    </section>
 
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
+    <section id="account">
+      <h2>3. Account & Authentication</h2>
+      <p>The Service provides authentication and verification services for Roblox accounts. When you use our Service:</p>
+      <ul>
+        <li>You authorize us to access your public Roblox profile information for verification purposes;</li>
+        <li>You are responsible for maintaining the confidentiality of any credentials or tokens generated through the Service;</li>
+        <li>You agree not to share, sell, or transfer your authentication tokens to any third party;</li>
+        <li>You must immediately notify us of any unauthorized use of your account or any security breach.</li>
+      </ul>
+      <p>We reserve the right to suspend or terminate your access if we suspect fraudulent, abusive, or unauthorized activity.</p>
+    </section>
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+    <section id="service">
+      <h2>4. Description of Service</h2>
+      <p>The Roblox Auth App provides the following services:</p>
+      <ul>
+        <li><strong>Account Verification:</strong> Confirming the authenticity of Roblox user identities;</li>
+        <li><strong>OAuth Integration:</strong> Secure authentication flows using Roblox's official APIs;</li>
+        <li><strong>Profile Data Access:</strong> Retrieving public profile information with user consent;</li>
+        <li><strong>Developer Tools:</strong> APIs and widgets for integrating Roblox auth into third-party applications.</li>
+      </ul>
+      <p>We reserve the right to modify, suspend, or discontinue any part of the Service at any time, with or without notice.</p>
+    </section>
 
-html {
-    scroll-behavior: smooth;
-    scroll-padding-top: 80px;
-}
+    <section id="conduct">
+      <h2>5. User Conduct</h2>
+      <p>You agree not to use the Service to:</p>
+      <ul>
+        <li>Violate any applicable local, state, national, or international law or regulation;</li>
+        <li>Impersonate any person or entity, or falsely state or misrepresent your affiliation with a person or entity;</li>
+        <li>Engage in any activity that interferes with or disrupts the Service or servers connected to the Service;</li>
+        <li>Attempt to gain unauthorized access to any portion of the Service, other accounts, or computer systems;</li>
+        <li>Use any automated system, including "robots," "spiders," or "offline readers," to access the Service;</li>
+        <li>Introduce any viruses, trojan horses, worms, or other harmful code;</li>
+        <li>Harvest or collect email addresses or other contact information of other users by electronic or other means;</li>
+        <li>Use the Service for any commercial solicitation purposes without our express written consent.</li>
+      </ul>
+    </section>
 
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    line-height: 1.6;
-    min-height: 100vh;
-    overflow-x: hidden;
-}
+    <section id="roblox">
+      <h2>6. Roblox Platform Rules</h2>
+      <p>Our Service operates in conjunction with the Roblox platform. By using our Service, you also agree to comply with:</p>
+      <ul>
+        <li>The <a href="https://en.help.roblox.com/hc/en-us/articles/115004647846" target="_blank">Roblox Terms of Use</a>;</li>
+        <li>The <a href="https://en.help.roblox.com/hc/en-us/articles/203313410" target="_blank">Roblox Community Standards</a>;</li>
+        <li>All applicable Roblox Developer policies and guidelines.</li>
+      </ul>
+      <p>Violation of Roblox's terms may result in immediate termination of your access to our Service, in addition to any actions taken by Roblox Corporation.</p>
+    </section>
 
-a {
-    color: var(--accent-primary);
-    text-decoration: none;
-    transition: var(--transition);
-}
+    <section id="data">
+      <h2>7. Data & API Usage</h2>
+      <p>When you authenticate through our Service, we access the following data from your Roblox account (with your explicit consent):</p>
+      <ul>
+        <li>Your Roblox User ID;</li>
+        <li>Your public display name and username;</li>
+        <li>Your public avatar thumbnail;</li>
+        <li>Your account creation date;</li>
+        <li>Your public profile description (if any).</li>
+      </ul>
+      <p>We do <strong>not</strong> access, store, or process:</p>
+      <ul>
+        <li>Your Roblox password or login credentials;</li>
+        <li>Your private messages or chat history;</li>
+        <li>Your purchase or transaction history;</li>
+        <li>Any data marked as private by Roblox.</li>
+      </ul>
+      <p>All data access is performed through Roblox's official, documented APIs and is subject to their rate limits and policies.</p>
+    </section>
 
-a:hover {
-    color: var(--accent-secondary);
-}
+    <section id="ip">
+      <h2>8. Intellectual Property</h2>
+      <p>The Service and its original content, features, and functionality are and will remain the exclusive property of the Roblox Auth App and its licensors. The Service is protected by copyright, trademark, and other laws.</p>
+      <p>Roblox, the Roblox logo, and all related names, logos, product and service names, designs, and slogans are trademarks of Roblox Corporation. We are not affiliated with, endorsed by, or sponsored by Roblox Corporation.</p>
+      <p>You retain ownership of any content you submit through the Service. By submitting content, you grant us a limited, non-exclusive, royalty-free license to use that content solely for the purpose of providing the Service.</p>
+    </section>
 
-/* ============================================
-   NAVIGATION
-   ============================================ */
+    <section id="termination">
+      <h2>9. Termination</h2>
+      <p>We may terminate or suspend your access to the Service immediately, without prior notice or liability, for any reason, including but not limited to:</p>
+      <ul>
+        <li>Breach of these Terms;</li>
+        <li>Violation of Roblox's Terms of Use;</li>
+        <li>Fraudulent or suspicious activity;</li>
+        <li>Requests by law enforcement or government agencies;</li>
+        <li>Discontinuation or material modification of the Service.</li>
+      </ul>
+      <p>Upon termination, your right to use the Service will immediately cease. All provisions of these Terms which by their nature should survive termination shall survive, including ownership provisions, warranty disclaimers, indemnity, and limitations of liability.</p>
+    </section>
 
-.navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 32px;
-    height: 64px;
-    background: rgba(10, 10, 15, 0.8);
-    backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid var(--border-color);
-}
+    <section id="disclaimer">
+      <h2>10. Disclaimer of Warranties</h2>
+      <p>THE SERVICE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.</p>
+      <p>We do not warrant that:</p>
+      <ul>
+        <li>The Service will function uninterrupted, secure, or available at any particular time or location;</li>
+        <li>Any errors or defects will be corrected;</li>
+        <li>The Service is free of viruses or other harmful components;</li>
+        <li>The results of using the Service will meet your requirements.</li>
+      </ul>
+    </section>
 
-.nav-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--text-primary);
-}
+    <section id="liability">
+      <h2>11. Limitation of Liability</h2>
+      <p>IN NO EVENT SHALL THE OPERATOR OF THE ROBLOX AUTH APP, NOR ITS DIRECTORS, EMPLOYEES, PARTNERS, AGENTS, SUPPLIERS, OR AFFILIATES, BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES, RESULTING FROM:</p>
+      <ul>
+        <li>Your access to or use of, or inability to access or use, the Service;</li>
+        <li>Any conduct or content of any third party on the Service;</li>
+        <li>Any content obtained from the Service;</li>
+        <li>Unauthorized access, use, or alteration of your transmissions or content.</li>
+      </ul>
+      <p>Our total liability to you for all claims arising from or relating to these Terms or your use of the Service shall not exceed the amount you paid us, if any, during the twelve (12) months prior to the event giving rise to liability, or $100.00, whichever is greater.</p>
+    </section>
 
-.nav-brand a {
-    color: var(--text-primary);
+    <section id="changes">
+      <h2>12. Changes to Terms</h2>
+      <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material, we will provide at least 30 days' notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion.</p>
+      <p>By continuing to access or use the Service after any revisions become effective, you agree to be bound by the revised Terms. If you do not agree to the new terms, you are no longer authorized to use the Service.</p>
+    </section>
+
+    <section id="contact">
+      <h2>13. Contact Information</h2>
+      <p>If you have any questions about these Terms, please contact us:</p>
+      <div class="contact-box">
+        <p><strong>Email:</strong> legal@robloxauth.app</p>
+        <p><strong>Discord:</strong> discord.gg/robloxauth</p>
+        <p><strong>Response Time:</strong> Within 48 business hours</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <span>RobloxAuth</span>
+    </div>
+    <div class="footer-links">
+      <a href="tos.html">Terms of Service</a>
+      <a href="privacy-policy.html">Privacy Policy</a>
+    </div>
+    <p class="footer-copy">© 2026 RobloxAuth. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>    color: var(--text-primary);
     text-decoration: none;
 }
 
